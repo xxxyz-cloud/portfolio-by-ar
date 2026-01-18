@@ -97,6 +97,42 @@
       transform: translateX(100%);
     }
   }
+
+  @keyframes glitch-1 {
+    0%, 100% {
+      transform: translate(0);
+    }
+    33% {
+      transform: translate(-2px, 2px);
+    }
+    66% {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  @keyframes glitch-2 {
+    0%, 100% {
+      transform: translate(0);
+    }
+    33% {
+      transform: translate(2px, -2px);
+    }
+    66% {
+      transform: translate(-2px, 2px);
+    }
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
 }
 
 body {
@@ -300,4 +336,29 @@ body::after {
 /* Shimmer Animation Class */
 .animate-shimmer {
   animation: shimmer 2s infinite;
+}
+
+/* Glitch Animation Classes */
+.animate-glitch-1 {
+  animation: glitch-1 0.3s infinite;
+}
+
+.animate-glitch-2 {
+  animation: glitch-2 0.3s infinite;
+}
+
+/* Gradient Animation */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+/* Hide Scrollbar Utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
 }
