@@ -96,8 +96,11 @@ const Works = () => {
 
         <div className="relative flex flex-col font-light" onMouseMove={handleMouseMove}>
           {projects.map((project, index) => (
-            <div
+            <a
               key={project.id}
+              href={project.href}
+              target="_blank"
+              rel="noopener noreferrer"
               ref={(el) => (projectRefs.current[index] = el)}
               className="relative flex flex-col gap-1 py-6 cursor-pointer group border-b border-border last:border-b-0"
               onMouseEnter={() => handleMouseEnter(index)}
@@ -124,17 +127,12 @@ const Works = () => {
                     {project.description}
                   </p>
                 </div>
-                <a
-                  href={project.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-shrink-0 p-2 sm:p-3 rounded-full border border-border hover:border-accent hover:bg-accent/10 transition-all duration-300 group/icon"
-                >
+                <div className="flex-shrink-0 p-2 sm:p-3 rounded-full border border-border group-hover:border-accent group-hover:bg-accent/10 transition-all duration-300">
                   <Icon 
                     icon="lucide:arrow-up-right" 
-                    className="size-4 sm:size-5 md:size-6 text-text group-hover/icon:text-accent transition-colors duration-300" 
+                    className="size-4 sm:size-5 md:size-6 text-text group-hover:text-accent transition-colors duration-300" 
                   />
-                </a>
+                </div>
               </div>
 
               <div className="flex flex-wrap px-6 sm:px-10 text-xs leading-loose uppercase transition-all duration-500 md:text-sm gap-x-3 sm:gap-x-4 gap-y-2 md:group-hover:px-12">
@@ -165,7 +163,7 @@ const Works = () => {
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            </div>
+            </a>
           ))}
 
           <div
