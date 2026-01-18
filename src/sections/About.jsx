@@ -11,21 +11,25 @@ const About = () => {
     MERN stack architect with AI integration expertise
     Where performance meets aesthetics`;
     
-  const aboutText = `I don't just write code—I craft digital experiences that make users go "How did they do that?"
-
-From pixel-perfect React UIs to bulletproof Node.js backends, every project is a blend of technical precision and creative vision. Whether it's real-time collaboration with Socket.io, 3D web graphics with Three.js, or AI-powered features with Google Gemini, I build what others think is impossible.
-
-Current Focus:
-⚡ Real-time collaborative applications
-🎮 Interactive 3D web experiences 
-🤖 AI integration that actually adds value
-📊 Solving complex algorithmic challenges 
-
-When I'm not shipping features:
-🎯 Grinding LeetCode problems at 3 AM
-🎨 Experimenting with GSAP and shader effects  
-📚 Learning the latest in web technology
-🎵 Debugging to Music`;
+  // Split about text into structured sections for visual engagement
+  const aboutIntro = `Full-stack developer who bridges code and creativity—building web experiences that captivate.`;
+  
+  const aboutMain = `I don't just write code, I craft digital experiences. From pixel-perfect React UIs to bulletproof Node.js backends, every project blends technical precision with creative vision. Whether it's real-time collaboration with Socket.io, 3D graphics with Three.js, or AI integration with Google Gemini—I build production-grade solutions that make people say "How did they do that?"`;
+  
+  const specializations = [
+    { icon: "lucide:zap", text: "Real-time collaborative applications", color: "accent" },
+    { icon: "lucide:box", text: "3D web experiences", color: "accent-blue" },
+    { icon: "lucide:brain", text: "AI-powered features", color: "accent-purple" },
+    { icon: "lucide:gauge", text: "Performance optimization", color: "accent" }
+  ];
+  
+  const metrics = [
+    { number: "500+", label: "DSA Problems", icon: "lucide:code-2" },
+    { number: "10+", label: "Production Projects", icon: "lucide:rocket" },
+    { number: "60", label: "FPS Mobile", icon: "lucide:activity" }
+  ];
+  
+  const aboutClosing = `Architecting MERN stack applications while exploring AI integration and IoT ecosystems. When I'm not shipping features, I'm grinding LeetCode, experimenting with shader effects, or learning the latest in web technology.`;
 
   const imgRef = useRef(null);
   const statsRef = useRef(null);
@@ -174,37 +178,111 @@ When I'm not shipping features:
               <div className="flex-1 h-px bg-gradient-to-r from-accent to-transparent" />
             </div>
 
-            {/* Text Content with Enhanced Styling */}
-            <div className="relative p-6 rounded-xl bg-primary/30 border border-border/50 backdrop-blur-sm">
-              {/* Glow effect on hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent-blue/5 opacity-0 hover:opacity-100 transition-opacity duration-500 rounded-xl pointer-events-none" />
-              
-              <div className="relative">
-                <AnimatedTextLines 
-                  text={aboutText} 
-                  className="text-base md:text-lg lg:text-xl font-light tracking-wide text-text-dim leading-relaxed"
-                />
+            {/* Text Content with Enhanced Visual Structure */}
+            <div className="space-y-6">
+              {/* Intro Statement */}
+              <div className="relative p-5 rounded-xl bg-gradient-to-br from-accent/10 to-transparent border-l-4 border-accent">
+                <p className="text-xl md:text-2xl font-display font-bold text-text leading-relaxed">
+                  {aboutIntro}
+                </p>
               </div>
 
-              {/* Decorative Elements */}
-              <div className="absolute top-0 left-0 w-2 h-2 bg-accent rounded-full" />
-              <div className="absolute top-0 right-0 w-2 h-2 bg-accent-blue rounded-full" />
-              <div className="absolute bottom-0 left-0 w-2 h-2 bg-accent-purple rounded-full" />
-              <div className="absolute bottom-0 right-0 w-2 h-2 bg-accent rounded-full" />
-            </div>
-
-            {/* Quick Stats Bar */}
-            <div className="grid grid-cols-3 gap-4 pt-4">
-              {[
-                { icon: "lucide:code-2", label: "500+ DSA", color: "accent" },
-                { icon: "lucide:rocket", label: "20+ Projects", color: "accent-blue" },
-                { icon: "lucide:award", label: "5+ Certs", color: "accent-purple" }
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border/30">
-                  <Icon icon={item.icon} className={`w-5 h-5 text-${item.color}`} />
-                  <span className="text-xs font-mono text-text-dim">{item.label}</span>
+              {/* Main Content */}
+              <div className="relative p-6 rounded-xl bg-primary/30 border border-border/50 backdrop-blur-sm group">
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl pointer-events-none" />
+                
+                <div className="relative">
+                  <AnimatedTextLines 
+                    text={aboutMain} 
+                    className="text-base md:text-lg font-light tracking-wide text-text-dim leading-relaxed"
+                  />
                 </div>
-              ))}
+
+                <div className="absolute top-0 left-0 w-2 h-2 bg-accent rounded-full" />
+                <div className="absolute top-0 right-0 w-2 h-2 bg-accent-blue rounded-full" />
+                <div className="absolute bottom-0 left-0 w-2 h-2 bg-accent-purple rounded-full" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 bg-accent rounded-full" />
+              </div>
+
+              {/* Current Specializations */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Icon icon="lucide:sparkles" className="w-5 h-5 text-accent" />
+                  <h4 className="text-lg font-display font-bold text-accent uppercase tracking-wider">
+                    Current Specializations
+                  </h4>
+                </div>
+                
+                <div className="grid gap-3">
+                  {specializations.map((spec, index) => (
+                    <div 
+                      key={index}
+                      className="group/spec relative flex items-center gap-4 p-4 rounded-lg bg-secondary/50 border border-border/50 hover:border-accent transition-all duration-300 overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-accent/10 to-transparent opacity-0 group-hover/spec:opacity-100 transition-opacity duration-300" />
+                      
+                      <div className={`relative flex-shrink-0 w-10 h-10 rounded-lg bg-${spec.color}/10 border border-${spec.color}/30 flex items-center justify-center group-hover/spec:scale-110 transition-transform duration-300`}>
+                        <Icon icon={spec.icon} className={`w-5 h-5 text-${spec.color}`} />
+                      </div>
+                      
+                      <p className="relative text-base font-mono text-text group-hover/spec:text-accent transition-colors duration-300">
+                        {spec.text}
+                      </p>
+
+                      <div className="absolute right-4 opacity-0 group-hover/spec:opacity-100 transition-opacity duration-300">
+                        <Icon icon="lucide:arrow-right" className="w-4 h-4 text-accent" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* By The Numbers */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Icon icon="lucide:bar-chart-3" className="w-5 h-5 text-accent-blue" />
+                  <h4 className="text-lg font-display font-bold text-accent-blue uppercase tracking-wider">
+                    By The Numbers
+                  </h4>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  {metrics.map((metric, index) => (
+                    <div 
+                      key={index}
+                      className="group/metric relative p-4 rounded-lg bg-gradient-to-br from-primary/50 to-primary/30 border border-border/50 hover:border-accent-blue transition-all duration-300 overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-accent-blue/10 to-transparent opacity-0 group-hover/metric:opacity-100 transition-opacity duration-500" />
+                      
+                      <div className="relative flex items-center gap-3">
+                        <Icon icon={metric.icon} className="w-6 h-6 text-accent-blue opacity-50 group-hover/metric:opacity-100 transition-opacity duration-300" />
+                        <div>
+                          <div className="text-2xl font-bold font-display text-accent-blue group-hover/metric:scale-110 transition-transform duration-300 inline-block">
+                            {metric.number}
+                          </div>
+                          <p className="text-xs font-mono text-text-dim uppercase tracking-wider">
+                            {metric.label}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-accent-blue/20 group-hover/metric:border-accent-blue/50 transition-colors duration-300" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Closing Statement */}
+              <div className="relative p-5 rounded-xl bg-gradient-to-br from-primary/40 to-secondary/40 border border-border/50">
+                <AnimatedTextLines 
+                  text={aboutClosing} 
+                  className="text-sm md:text-base font-light italic text-text-dim leading-relaxed"
+                />
+                
+                <div className="absolute bottom-2 right-2 opacity-20">
+                  <Icon icon="lucide:code-2" className="w-12 h-12 text-accent" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
