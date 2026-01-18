@@ -98,7 +98,7 @@ const Navbar = () => {
     <>
       <nav
         ref={navRef}
-        className="fixed z-50 flex flex-col justify-between w-full h-full px-6 sm:px-8 md:px-10 uppercase bg-secondary/95 backdrop-blur-xl text-text py-20 sm:py-24 md:py-28 gap-y-6 sm:gap-y-8 md:gap-y-10 md:w-3/4 lg:w-2/3 xl:w-1/2 md:left-auto md:right-0 border-l border-accent/20 overflow-y-auto"
+        className="fixed z-50 flex flex-col justify-between w-full h-full px-6 sm:px-8 md:px-10 uppercase bg-secondary/95 backdrop-blur-xl text-text py-20 sm:py-24 md:py-28 gap-y-6 sm:gap-y-8 md:gap-y-10 md:w-3/4 lg:w-2/3 xl:w-1/2 md:left-auto md:right-0 border-l border-accent/20 overflow-y-auto scrollbar-hide"
       >
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="grid-bg w-full h-full" />
