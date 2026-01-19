@@ -166,7 +166,8 @@ export const achievements = [
 
 export const stats = [
   { number: "500+", label: "DSA Problems Solved" },
-  { number: "20+", label: "Production Projects" },
+  { number: "10+", label: "Production Projects" },
   { number: "50+", label: "Concurrent Users Supported" },
   { number: "60", label: "FPS Mobile Performance" },
 ];
+
