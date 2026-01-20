@@ -101,7 +101,7 @@ export const projects = [
     name: "GameBit Agency",
     description:
       "Cyberpunk portfolio with 3D helmet model, particle systems, and GPU-accelerated effects. Award-worthy animations with Locomotive Scroll.",
-    href: "https://gamebitdev.netlify.app/",
+    href: "https://game-bit-seven.vercel.app/",
     image: "/assets/projects/gamebit.jpg",
     frameworks: [
       { id: 1, name: "Three.js" },
@@ -116,7 +116,7 @@ export const projects = [
     name: "Hyperspace Rush",
     description:
       "3D tunnel racing game with procedural track generation, difficulty progression, and 60fps mobile performance. Pure WebGL mastery.",
-    href: "https://hyperspacerush.netlify.app/",
+    href: "https://hyper-space-rush.vercel.app/",
     image: "/assets/projects/hyperspace.jpg",
     frameworks: [
       { id: 1, name: "Three.js" },
@@ -131,7 +131,7 @@ export const projects = [
     name: "SSS API Learning Hub",
     description:
       "Interactive API learning platform with 50+ topics, progressive quizzes, and 100+ viva questions. Engaging particle animations throughout.",
-    href: "https://madeforsss.netlify.app",
+    href: "https://working-with-api-bay.vercel.app/",
     image: "/assets/projects/api-hub.jpg",
     frameworks: [
       { id: 1, name: "Vanilla JS" },
@@ -170,4 +170,5 @@ export const stats = [
   { number: "50+", label: "Concurrent Users Supported" },
   { number: "60", label: "FPS Mobile Performance" },
 ];
+
 
