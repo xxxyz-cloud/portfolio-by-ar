@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import AnimatedHeaderSection from "../components/AnimatedHeaderSection";
 import { servicesData } from "../constants";
+import { useMediaQuery } from "react-responsive";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/all";
@@ -27,14 +28,13 @@ const Services = () => {
     From real-time collaboration to 3D web experiences
     Merging technical precision with creative vision`;
     
-  const horizontalRef = useRef(null);
-  const mobileScrollRef = useRef(null);
   const serviceRefs = useRef([]);
   const imageRefs = useRef([]);
   const [activeIndex, setActiveIndex] = useState(null);
+  const isDesktop = useMediaQuery({ minWidth: "48rem" });
 
   const handleMouseEnter = (index) => {
-    if (window.innerWidth < 768) return;
+    if (!isDesktop) return;
     setActiveIndex(index);
   };
 
@@ -43,83 +43,101 @@ const Services = () => {
   };
 
   useGSAP(() => {
-    // Desktop: Horizontal scroll animation
-    if (window.innerWidth >= 768) {
-      const sections = gsap.utils.toArray('.service-card');
-      const totalWidth = sections.reduce((acc, section) => acc + section.offsetWidth, 0);
-      
-      gsap.to(sections, {
-        xPercent: -100 * (sections.length - 1),
-        ease: "none",
+    serviceRefs.current.forEach((el, index) => {
+      if (!el) return;
+
+      gsap.from(el, {
+        y: 200,
+        opacity: 0,
         scrollTrigger: {
-          trigger: horizontalRef.current,
-          pin: true,
-          scrub: 1,
-          snap: 1 / (sections.length - 1),
-          end: () => `+=${totalWidth}`,
-        }
+          trigger: el,
+          start: "top 80%",
+        },
+        duration: 1,
+        ease: "circ.out",
       });
 
-      // Individual service card animations for desktop
-      serviceRefs.current.forEach((el, index) => {
-        if (!el) return;
-
-        gsap.to(imageRefs.current[index], {
-          yPercent: -20,
-          ease: "none",
-          scrollTrigger: {
-            trigger: el,
-            scrub: 1,
-            containerAnimation: ScrollTrigger.getById('horizontal-scroll'),
-          }
+      el.addEventListener("mouseenter", () => {
+        gsap.to(el, {
+          scale: 1.01,
+          duration: 0.3,
+          ease: "power2.out",
         });
-
-        gsap.fromTo(el, 
-          { scale: 0.9, opacity: 0.5 },
-          {
-            scale: 1,
-            opacity: 1,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: el,
-              start: "left 80%",
-              end: "left 20%",
-              scrub: 1,
-              containerAnimation: ScrollTrigger.getById('horizontal-scroll'),
-            }
-          }
-        );
       });
-    } else {
-      // Mobile: Horizontal scroll container animation
-      const mobileContainer = mobileScrollRef.current;
-      if (!mobileContainer) return;
 
-      const scrollWidth = mobileContainer.scrollWidth;
-      const containerWidth = mobileContainer.offsetWidth;
-
-      gsap.to(mobileContainer, {
-        x: -(scrollWidth - containerWidth),
-        ease: "none",
-        scrollTrigger: {
-          trigger: mobileContainer,
-          pin: true,
-          scrub: 1,
-          end: () => `+=${scrollWidth - containerWidth}`,
-          invalidateOnRefresh: true,
-        }
+      el.addEventListener("mouseleave", () => {
+        gsap.to(el, {
+          scale: 1,
+          duration: 0.3,
+          ease: "power2.out",
+        });
       });
-    }
+    });
   }, []);
 
   return (
-    <section id="services" className="min-h-screen bg-secondary relative overflow-hidden">
-      {/* Background elements */}
+    <section id="services" className="min-h-screen bg-secondary rounded-t-4xl relative overflow-hidden">
+      {/* Refined SVG Filters - Much Subtler */}
+      <svg className="absolute w-0 h-0" aria-hidden="true">
+        <defs>
+          {/* Subtle Wave Distortion */}
+          <filter id="subtle-wave" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.008"
+              numOctaves="2"
+              result="turbulence"
+            >
+              <animate
+                attributeName="baseFrequency"
+                dur="20s"
+                values="0.008;0.012;0.008"
+                repeatCount="indefinite"
+              />
+            </feTurbulence>
+            <feDisplacementMap
+              in2="turbulence"
+              in="SourceGraphic"
+              scale="8"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+
+          {/* Gentle Morph Effect */}
+          <filter id="gentle-morph" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence
+              type="turbulence"
+              baseFrequency="0.01"
+              numOctaves="1"
+              result="noise"
+            >
+              <animate
+                attributeName="baseFrequency"
+                dur="15s"
+                values="0.01;0.015;0.01"
+                repeatCount="indefinite"
+              />
+            </feTurbulence>
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="noise"
+              scale="5"
+              xChannelSelector="R"
+              yChannelSelector="B"
+            />
+          </filter>
+        </defs>
+      </svg>
+
+      {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="grid-bg w-full h-full" />
       </div>
-      <div className="absolute top-40 right-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-glow-pulse" />
-      <div className="absolute bottom-40 left-20 w-96 h-96 bg-accent-blue/10 rounded-full blur-3xl animate-glow-pulse" style={{ animationDelay: '1s' }} />
+
+      {/* Glowing Orbs */}
+      <div className="absolute top-40 right-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-40 left-20 w-96 h-96 bg-accent-blue/10 rounded-full blur-3xl" />
 
       <div className="relative z-10">
         <AnimatedHeaderSection
@@ -130,185 +148,116 @@ const Services = () => {
           withScrollTrigger={true}
         />
 
-        {/* Desktop: Horizontal Scroll Container */}
-        <div 
-          ref={horizontalRef}
-          className="hidden md:block overflow-hidden"
-        >
-          <div className="flex w-fit">
-            {servicesData.map((service, index) => (
-              <div
-                key={index}
-                ref={(el) => (serviceRefs.current[index] = el)}
-                className="service-card w-screen h-screen flex items-center justify-center px-20 flex-shrink-0"
-                onMouseEnter={() => handleMouseEnter(index)}
-                onMouseLeave={handleMouseLeave}
-              >
-                <div className="relative w-full max-w-7xl h-[85vh] group">
-                  <div className="absolute inset-0 grid grid-cols-12 gap-8 p-12 bg-primary/50 rounded-3xl border border-border overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                    
-                    <div className="absolute top-8 right-8 text-[200px] font-display font-bold text-accent/5 leading-none pointer-events-none">
-                      {String(index + 1).padStart(2, '0')}
-                    </div>
-
-                    {/* Image Section */}
-                    <div className="col-span-7 relative z-10 flex items-center">
-                      <div 
-                        ref={(el) => (imageRefs.current[index] = el)}
-                        className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden group/img"
-                      >
-                        <img
-                          src={serviceImages[index]}
-                          alt={service.title}
-                          className="w-full h-full object-cover transition-all duration-1000 group-hover/img:scale-110"
-                        />
-                        
-                        <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent opacity-60 group-hover/img:opacity-40 transition-opacity duration-700" />
-                        
-                        <div className="absolute top-6 right-6 w-16 h-16 bg-accent/90 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-primary opacity-0 group-hover/img:opacity-100 transition-all duration-500 transform scale-0 group-hover/img:scale-100">
-                          <Icon icon={serviceIcons[index]} className="text-primary text-3xl" />
-                        </div>
-
-                        <div className="absolute inset-0 opacity-0 group-hover/img:opacity-100 transition-opacity duration-700">
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/20 to-transparent h-32 animate-scan" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Content Section */}
-                    <div className="col-span-5 relative z-10 flex flex-col justify-between py-8">
-                      <div>
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="w-12 h-px bg-accent" />
-                          <span className="text-xs font-mono text-accent tracking-widest uppercase">
-                            Service {String(index + 1).padStart(2, '0')}
-                          </span>
-                        </div>
-
-                        <h2 className="text-5xl xl:text-6xl font-display font-bold mb-6 leading-tight group-hover:text-accent transition-colors duration-500">
-                          {service.title}
-                        </h2>
-
-                        <p className="text-xl leading-relaxed text-text-dim mb-8">
-                          {service.description}
-                        </p>
-                      </div>
-
-                      {/* Service Items */}
-                      <div className="space-y-4">
-                        {service.items.map((item, itemIndex) => (
-                          <div 
-                            key={`item-${index}-${itemIndex}`}
-                            className="group/item relative"
-                          >
-                            <div className="flex items-start gap-4 p-5 rounded-xl bg-primary/40 border border-border/50 hover:border-accent-blue transition-all duration-300 hover:shadow-lg hover:shadow-accent-blue/10 cursor-pointer">
-                              <span className="flex-shrink-0 text-sm font-mono text-accent">
-                                0{itemIndex + 1}
-                              </span>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-display mb-1 group-hover/item:text-accent-blue transition-colors duration-300">
-                                  {item.title}
-                                </h3>
-                                <p className="text-sm text-text-dim font-mono leading-relaxed">
-                                  {item.description}
-                                </p>
-                              </div>
-                              <Icon 
-                                icon="lucide:arrow-up-right" 
-                                className="flex-shrink-0 text-text-dim opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" 
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Corner accents */}
-                    <div className="absolute top-0 left-0 w-24 h-24 border-t-2 border-l-2 border-accent/30 rounded-tl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="absolute bottom-0 right-0 w-24 h-24 border-b-2 border-r-2 border-accent-blue/30 rounded-br-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile: Horizontal Scroll Container */}
-        <div className="md:hidden relative overflow-hidden">
-          <div 
-            ref={mobileScrollRef}
-            className="flex w-fit"
+        {servicesData.map((service, index) => (
+          <div
+            ref={(el) => (serviceRefs.current[index] = el)}
+            key={index}
+            className="sticky px-10 pt-8 pb-12 text-text bg-secondary border-t-2 border-border/50 group hover:border-accent/50 transition-all duration-500"
+            style={
+              isDesktop
+                ? {
+                    top: `calc(10vh + ${index * 5}em)`,
+                    marginBottom: `${(servicesData.length - index - 1) * 5}rem`,
+                  }
+                : { top: 0 }
+            }
           >
-            {servicesData.map((service, index) => (
-              <div
-                key={index}
-                className="w-screen h-screen flex items-center justify-center px-6 flex-shrink-0"
-              >
-                <div className="relative w-full h-[85vh] max-w-lg">
-                  <div className="relative h-full p-6 rounded-2xl bg-primary/50 border border-border overflow-y-auto">
-                    {/* Mobile Image */}
-                    <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-6">
+            <div className="relative p-8 rounded-2xl bg-primary/50 border border-border group-hover:border-accent transition-all duration-500 overflow-hidden">
+              {/* Gradient Background on Hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <div className="relative flex flex-col lg:flex-row items-start justify-between gap-8 font-light">
+                {/* Refined Image Section with Smooth Effects */}
+                <div className="w-full lg:w-2/5 relative">
+                  <div 
+                    ref={(el) => (imageRefs.current[index] = el)}
+                    className="image-container relative aspect-[4/3] rounded-xl overflow-hidden border-2 border-border group-hover:border-accent transition-all duration-500"
+                    onMouseEnter={() => handleMouseEnter(index)}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    {/* Main Image with Refined Distortion */}
+                    <div className="image-wrapper">
                       <img
                         src={serviceImages[index]}
                         alt={service.title}
-                        className="w-full h-full object-cover"
+                        className={`service-image w-full h-full object-cover transition-all duration-1000 ease-out ${
+                          activeIndex === index ? 'image-active' : ''
+                        }`}
+                        loading="eager"
                       />
-                      <div className="absolute top-4 right-4 w-12 h-12 bg-accent/90 rounded-full flex items-center justify-center">
-                        <Icon icon={serviceIcons[index]} className="text-primary text-xl" />
-                      </div>
                     </div>
 
-                    {/* Mobile Content */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-8 h-px bg-accent" />
-                      <span className="text-xs font-mono text-accent tracking-widest">
-                        SERVICE {String(index + 1).padStart(2, '0')}
-                      </span>
+                    {/* Subtle Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none" />
+
+                    {/* Gentle Shimmer Effect */}
+                    <div className="shimmer-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
+                      <div className="shimmer-beam" />
                     </div>
 
-                    <h2 className="text-3xl font-display font-bold mb-4">
-                      {service.title}
-                    </h2>
+                    {/* Accent Glow Border */}
+                    <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+                      <div className="absolute inset-0 rounded-xl shadow-[inset_0_0_20px_rgba(0,255,136,0.15)]" />
+                    </div>
 
-                    <p className="text-base leading-relaxed text-text-dim mb-6">
-                      {service.description}
-                    </p>
+                    {/* Service Icon Overlay */}
+                    <div className="absolute top-4 right-4 w-12 h-12 bg-accent/20 backdrop-blur-md rounded-full flex items-center justify-center border border-accent/30 opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110">
+                      <Icon icon={serviceIcons[index]} className="text-accent text-2xl" />
+                    </div>
+                  </div>
+                </div>
 
-                    <div className="space-y-3">
-                      {service.items.map((item, itemIndex) => (
-                        <div 
-                          key={`item-${index}-${itemIndex}`}
-                          className="flex items-start gap-3 p-4 rounded-lg bg-primary/30 border border-border/50"
-                        >
-                          <span className="flex-shrink-0 text-xs font-mono text-accent">
+                {/* Content Section */}
+                <div className="flex-1 flex flex-col gap-6">
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="w-12 h-px bg-accent" />
+                    <span className="text-xs font-mono text-accent tracking-widest">
+                      SERVICE {String(index + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold group-hover:text-accent transition-colors duration-500">
+                    {service.title}
+                  </h2>
+
+                  <p className="text-base md:text-lg lg:text-xl leading-relaxed text-text-dim">
+                    {service.description}
+                  </p>
+
+                  <div className="flex flex-col gap-4 text-xl md:text-2xl lg:text-3xl">
+                    {service.items.map((item, itemIndex) => (
+                      <div 
+                        key={`item-${index}-${itemIndex}`}
+                        className="relative group/item"
+                      >
+                        <div className="flex items-start gap-4 p-4 rounded-lg bg-primary/30 border border-border/50 group-hover/item:border-accent-blue transition-all duration-300 hover:shadow-lg hover:shadow-accent-blue/10">
+                          <span className="flex-shrink-0 text-sm font-mono text-accent mt-1">
                             0{itemIndex + 1}
                           </span>
                           <div className="flex-1">
-                            <h3 className="text-lg font-display mb-1">
+                            <h3 className="font-display mb-1 group-hover/item:text-accent-blue transition-colors duration-300">
                               {item.title}
                             </h3>
-                            <p className="text-sm text-text-dim font-mono">
+                            <p className="text-sm md:text-base text-text-dim font-mono">
                               {item.description}
                             </p>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                        {itemIndex < service.items.length - 1 && (
+                          <div className="w-full h-px my-2 bg-gradient-to-r from-transparent via-border to-transparent" />
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
 
-          {/* Scroll indicator for mobile */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-primary/80 backdrop-blur-sm border border-accent/30">
-            <Icon icon="lucide:swipe-right" className="w-4 h-4 text-accent animate-pulse" />
-            <span className="text-xs font-mono text-accent uppercase tracking-wider">
-              Swipe to explore
-            </span>
+              {/* Corner Decorations */}
+              <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-accent/30 rounded-tl-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-accent-blue/30 rounded-br-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            </div>
           </div>
-        </div>
+        ))}
 
         {/* CTA Section */}
         <div className="px-10 py-16 text-center relative">
@@ -334,32 +283,144 @@ const Services = () => {
       </div>
 
       <style jsx>{`
-        @keyframes scan {
+        /* Clean Container Base */
+        .image-container {
+          position: relative;
+          overflow: hidden;
+          isolation: isolate;
+        }
+
+        .image-wrapper {
+          width: 100%;
+          height: 100%;
+          position: relative;
+          overflow: hidden;
+        }
+
+        /* Refined Image Effects - Smooth & Subtle */
+        .service-image {
+          will-change: transform, filter;
+          transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1),
+                      filter 1s ease;
+          transform-origin: center center;
+        }
+
+        /* Gentle Hover Scale */
+        .image-container:hover .service-image {
+          transform: scale(1.05);
+        }
+
+        /* Active State with Minimal Distortion */
+        .service-image.image-active {
+          filter: url(#subtle-wave);
+        }
+
+        /* Smooth Shimmer Beam */
+        .shimmer-overlay {
+          z-index: 1;
+        }
+
+        .shimmer-beam {
+          position: absolute;
+          top: -50%;
+          left: -100%;
+          width: 50%;
+          height: 200%;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(0, 255, 136, 0.15) 50%,
+            transparent 100%
+          );
+          transform: skewX(-20deg);
+          animation: shimmer-sweep 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer-sweep {
           0% {
-            transform: translateY(-100%);
+            left: -100%;
           }
-          100% {
-            transform: translateY(400%);
+          50%, 100% {
+            left: 150%;
           }
         }
 
-        .animate-scan {
-          animation: scan 3s ease-in-out infinite;
+        /* Subtle Pulse on Hover */
+        .image-container:hover .image-wrapper::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(
+            circle at center,
+            transparent 30%,
+            rgba(0, 255, 136, 0.08) 60%,
+            transparent 100%
+          );
+          animation: gentle-pulse 3s ease-in-out infinite;
+          pointer-events: none;
+          z-index: 2;
         }
 
-        @keyframes glow-pulse {
+        @keyframes gentle-pulse {
           0%, 100% {
-            opacity: 0.1;
+            opacity: 0.3;
             transform: scale(1);
           }
           50% {
-            opacity: 0.2;
-            transform: scale(1.1);
+            opacity: 0.6;
+            transform: scale(1.02);
           }
         }
 
-        .animate-glow-pulse {
-          animation: glow-pulse 4s ease-in-out infinite;
+        /* Minimal Morph Effect on Extended Hover */
+        .image-container:hover .service-image.image-active {
+          animation: subtle-morph 8s ease-in-out infinite;
+        }
+
+        @keyframes subtle-morph {
+          0%, 100% {
+            filter: url(#subtle-wave);
+          }
+          50% {
+            filter: url(#gentle-morph);
+          }
+        }
+
+        /* Clean Fade Transitions */
+        .service-image,
+        .shimmer-overlay,
+        .image-wrapper::before {
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Disable effects on mobile for performance */
+        @media (max-width: 767px) {
+          .service-image.image-active {
+            filter: none;
+            animation: none;
+          }
+
+          .image-container:hover .service-image {
+            transform: scale(1.03);
+          }
+
+          .shimmer-beam {
+            display: none;
+          }
+
+          .image-wrapper::before {
+            display: none;
+          }
+        }
+
+        /* Smooth Hardware Acceleration */
+        .service-image,
+        .shimmer-beam,
+        .image-wrapper::before {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
         }
       `}</style>
     </section>
