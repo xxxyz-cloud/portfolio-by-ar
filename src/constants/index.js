@@ -85,7 +85,7 @@ export const projects = [
     name: "CodexSpace",
     description:
       "Real-time collaborative IDE powered by AI. Built for 50+ concurrent users with Google Gemini integration, WebContainer execution, and smart rate limiting.",
-    href: "https://codex-space.vercel.app",
+    href: "https://codex-space-frontend.vercel.app/",
     image: "/assets/projects/codexspace.jpg",
     frameworks: [
       { id: 1, name: "React" },
@@ -170,5 +170,6 @@ export const stats = [
   { number: "50+", label: "Concurrent Users Supported" },
   { number: "60", label: "FPS Mobile Performance" },
 ];
+
 
 
