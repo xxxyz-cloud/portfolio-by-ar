@@ -5,6 +5,7 @@ import ServiceSummary from "./sections/ServiceSummary";
 import Services from "./sections/Services";
 import ReactLenis from "lenis/react";
 import About from "./sections/About";
+import WorksIntro from "./sections/WorksIntro";
 import Works from "./sections/Works";
 import ContactSummary from "./sections/ContactSummary";
 import Contact from "./sections/Contact";
@@ -229,6 +230,7 @@ const App = () => {
         <ServiceSummary />
         <Services />
         <About />
+        <WorksIntro />
         <Works />
         <ContactSummary />
         <Contact />
