@@ -140,6 +140,21 @@ export const projects = [
       { id: 4, name: "Canvas API" },
     ],
   },
+    {
+    id: 5,
+    name: "Inkwell - Animated Journal Diary",
+    description:
+      "A premium animated landing page for journaling apps. Includes a custom pencil cursor with ink trail, ghost handwriting canvas animation, darkroom card effects, smooth scroll and responsive design",
+    href: "https://visual-diary-pink.vercel.app/",
+    image: "/assets/projects/1.jpg",
+    frameworks: [
+      { id: 1, name: "Three JS" },
+      { id: 2, name: "React" },
+      { id: 3, name: "Gsap" },
+      { id: 4, name: "Tailwind" },
+    ],
+  },
+  
 ];
 
 export const socials = [
@@ -170,6 +185,7 @@ export const stats = [
   { number: "50+", label: "Concurrent Users Supported" },
   { number: "60", label: "FPS Mobile Performance" },
 ];
+
 
 
 
