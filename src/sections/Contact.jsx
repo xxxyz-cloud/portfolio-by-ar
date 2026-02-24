@@ -1,613 +1,634 @@
+
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useGSAP } from "@gsap/react";
-import AnimatedHeaderSection from "../components/AnimatedHeaderSection";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/all";
+import { Icon } from "@iconify/react/dist/iconify.js";
 import Marquee from "../components/Marquee";
 import { socials } from "../constants";
-import gsap from "gsap";
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { useState, useRef } from "react";
 
-const Contact = () => {
-  const text = `Got a project idea or want to collaborate?
-    Let's build something extraordinary together
-    I'm always open to discussing new opportunities`;
-  
-  const items = [
-    "let's collaborate",
-    "let's collaborate",
-    "let's collaborate",
-    "let's collaborate",
-    "let's collaborate",
-  ];
+gsap.registerPlugin(ScrollTrigger);
 
-  // Form state with validation
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: ''
-  });
-  
-  const [formErrors, setFormErrors] = useState({});
-  const [formTouched, setFormTouched] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null); // 'success', 'error', null
-  
-  const formRef = useRef(null);
-  const nameInputRef = useRef(null);
-  const emailInputRef = useRef(null);
-  const messageInputRef = useRef(null);
-
-  useGSAP(() => {
-    gsap.from(".social-link", {
-      y: 100,
-      opacity: 0,
-      delay: 0.5,
-      duration: 1,
-      stagger: 0.3,
-      ease: "back.out",
-      scrollTrigger: {
-        trigger: ".social-link",
-      },
-    });
-
-    gsap.from(".contact-form", {
-      y: 80,
-      opacity: 0,
-      delay: 0.3,
-      duration: 1.2,
-      ease: "power3.out",
-      scrollTrigger: {
-        trigger: ".contact-form",
-        start: "top 85%",
-      },
-    });
+/* ─── UnicornStudio Scene ────────────────────────────────────── */
+const ContactScene = () => {
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (mounted.current) return;
+    mounted.current = true;
+    const load = () => {
+      if (typeof window.UnicornStudio === "undefined") { setTimeout(load, 300); return; }
+      window.UnicornStudio.addScene({
+        elementId: "contact-unicorn-bg",
+        fps: 60, scale: 1,
+        dpi: Math.min(window.devicePixelRatio, 2),
+        lazyLoad: false,
+        filePath: "/ContactEffect/effect.json",
+        interactivity: { mouse: { disableMobile: true } },
+      }).catch((e) => console.warn("UnicornStudio:", e));
+    };
+    if (!document.getElementById("us-script-contact")) {
+      const s = document.createElement("script");
+      s.id = "us-script-contact";
+      s.src = "https://cdn.unicorn.studio/v1.3.2/unicornStudio.umd.js";
+      s.onload = load;
+      document.head.appendChild(s);
+    } else { load(); }
   }, []);
+  return <div id="contact-unicorn-bg" className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }} />;
+};
 
-  // Live validation
-  const validateField = (name, value) => {
-    switch (name) {
-      case 'name':
-        if (!value.trim()) return 'Name is required';
-        if (value.trim().length < 2) return 'Name must be at least 2 characters';
-        return '';
-      case 'email':
-        if (!value.trim()) return 'Email is required';
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) return 'Invalid email format';
-        return '';
-      case 'message':
-        if (!value.trim()) return 'Message is required';
-        if (value.trim().length < 10) return 'Message must be at least 10 characters';
-        return '';
-      default:
-        return '';
-    }
-  };
+/* ─── Text Scramble ──────────────────────────────────────────── */
+const CHARS = "!<>-_\\/[]{}—=+*^?#@$%&0123456789ABCDEFabcdef";
+const useScramble = (text, active) => {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!active || !ref.current) return;
+    const el = ref.current;
+    let frame = 0; const total = 32; let raf;
+    const tick = () => {
+      const p = frame / total;
+      el.textContent = text.split("").map((ch, i) => {
+        if (ch === " ") return " ";
+        if (i / text.length < p) return text[i];
+        return CHARS[Math.floor(Math.random() * CHARS.length)];
+      }).join("");
+      frame++;
+      if (frame <= total) raf = requestAnimationFrame(tick);
+      else el.textContent = text;
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [active, text]);
+  return ref;
+};
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Validate on change if field has been touched
-    if (formTouched[name]) {
-      const error = validateField(name, value);
-      setFormErrors(prev => ({ ...prev, [name]: error }));
-    }
-  };
+/* ─── Magnetic wrapper ───────────────────────────────────────── */
+const Magnetic = ({ children, strength = 0.2 }) => {
+  const ref = useRef(null);
+  const onMove = useCallback((e) => {
+    const { left, top, width, height } = ref.current.getBoundingClientRect();
+    const dx = (e.clientX - left - width / 2) * strength;
+    const dy = (e.clientY - top - height / 2) * strength;
+    gsap.to(ref.current, { x: dx, y: dy, duration: 0.5, ease: "power2.out" });
+  }, [strength]);
+  const onLeave = useCallback(() => {
+    gsap.to(ref.current, { x: 0, y: 0, duration: 0.9, ease: "elastic.out(1,0.4)" });
+  }, []);
+  return (
+    <div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} style={{ willChange: "transform" }}>
+      {children}
+    </div>
+  );
+};
 
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    setFormTouched(prev => ({ ...prev, [name]: true }));
-    const error = validateField(name, value);
-    setFormErrors(prev => ({ ...prev, [name]: error }));
-  };
+/* ─── Floating label field ───────────────────────────────────── */
+const Field = ({ id, name, label, type = "text", value, onChange, onBlur,
+  error, touched, accent = "#00ff88", multiline = false, rows = 5, maxLength }) => {
+  const [focused, setFocused] = useState(false);
+  const lineRef = useRef(null);
+  const labelRef = useRef(null);
+  const isUp = focused || value.length > 0;
 
-  const handleFocus = (inputRef) => {
-    if (inputRef.current) {
-      gsap.to(inputRef.current, {
-        scale: 1.02,
-        duration: 0.3,
-        ease: "power2.out",
-      });
-    }
-  };
+  useEffect(() => {
+    if (!lineRef.current) return;
+    gsap.to(lineRef.current, { scaleX: focused ? 1 : 0, duration: 0.4, ease: "power3.out", transformOrigin: "left" });
+  }, [focused]);
 
-  const handleFocusOut = (inputRef) => {
-    if (inputRef.current) {
-      gsap.to(inputRef.current, {
-        scale: 1,
-        duration: 0.3,
-        ease: "power2.out",
-      });
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validate all fields
-    const errors = {};
-    Object.keys(formData).forEach(key => {
-      const error = validateField(key, formData[key]);
-      if (error) errors[key] = error;
+  useEffect(() => {
+    if (!labelRef.current) return;
+    gsap.to(labelRef.current, {
+      y: isUp ? -22 : 0, scale: isUp ? 0.76 : 1,
+      color: isUp ? (error && touched ? "#ef4444" : accent) : "rgba(229,229,229,0.3)",
+      duration: 0.3, ease: "power2.out", transformOrigin: "left",
     });
-    
-    setFormErrors(errors);
-    setFormTouched({ name: true, email: true, message: true });
-    
-    if (Object.keys(errors).length > 0) {
-      // Shake animation on error
-      gsap.to(formRef.current, {
-        x: [-10, 10, -10, 10, 0],
-        duration: 0.5,
-        ease: "power2.out",
-      });
-      return;
-    }
-    
-    // Submit to Web3Forms
-    setIsSubmitting(true);
-    
-    try {
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          access_key: '3cf7a9c6-0d4d-43d9-bb80-42b291901303',
-          name: formData.name,
-          email: formData.email,
-          message: formData.message,
-          subject: `New Contact Form Submission from ${formData.name}`,
-        })
-      });
+  }, [isUp, accent, error, touched]);
 
-      const result = await response.json();
-
-      if (result.success) {
-        setSubmitStatus('success');
-        setFormData({ name: '', email: '', message: '' });
-        setFormTouched({});
-        
-        // Success animation
-        gsap.to(formRef.current, {
-          scale: 1.05,
-          duration: 0.3,
-          ease: "back.out(1.5)",
-          yoyo: true,
-          repeat: 1,
-        });
-        
-        setTimeout(() => setSubmitStatus(null), 5000);
-      } else {
-        throw new Error(result.message || 'Submission failed');
-      }
-    } catch (error) {
-      console.error('Form submission error:', error);
-      setSubmitStatus('error');
-      setTimeout(() => setSubmitStatus(null), 5000);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const shared = {
+    id, name, value, maxLength, onChange,
+    onBlur: (e) => { setFocused(false); onBlur?.(e); },
+    onFocus: () => setFocused(true),
+    style: {
+      width: "100%", background: "transparent", border: "none",
+      borderBottom: `1px solid ${error && touched ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}`,
+      padding: "18px 0 10px", color: "#e5e5e5",
+      fontFamily: "var(--font-mono)", fontSize: "clamp(0.85rem,1.4vw,0.95rem)",
+      outline: "none", resize: "none", letterSpacing: "0.02em",
+    },
   };
-
-  const getCharCount = (text, max) => {
-    const count = text.length;
-    const percentage = (count / max) * 100;
-    return { count, percentage, isNearLimit: percentage > 80 };
-  };
-
-  const messageCharLimit = 500;
-  const messageStats = getCharCount(formData.message, messageCharLimit);
 
   return (
-    <section
-      id="contact"
-      className="relative flex flex-col justify-between min-h-screen bg-secondary overflow-hidden"
-    >
-      {/* Background Elements */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="grid-bg w-full h-full" />
+    <div style={{ position: "relative", paddingTop: 14 }}>
+      <label ref={labelRef} htmlFor={id} style={{
+        position: "absolute", top: 30, left: 0,
+        fontFamily: "var(--font-mono)", fontSize: "clamp(0.78rem,1.2vw,0.84rem)",
+        letterSpacing: "0.14em", textTransform: "uppercase",
+        color: "rgba(229,229,229,0.3)", pointerEvents: "none", transformOrigin: "left",
+      }}>
+        {label}
+      </label>
+      {multiline ? <textarea rows={rows} {...shared} /> : <input type={type} {...shared} />}
+      <div ref={lineRef} style={{
+        position: "absolute", bottom: 0, left: 0, right: 0, height: 2,
+        background: error && touched ? "rgba(239,68,68,0.7)" : `linear-gradient(to right, ${accent}, ${accent}66)`,
+        transform: "scaleX(0)", transformOrigin: "left",
+        boxShadow: focused ? `0 0 14px ${accent}55` : "none",
+      }} />
+      {error && touched && (
+        <p style={{ marginTop: 6, fontFamily: "var(--font-mono)", fontSize: 11, color: "#ef4444", letterSpacing: "0.06em" }}>
+          — {error}
+        </p>
+      )}
+      {multiline && maxLength && (
+        <p style={{
+          position: "absolute", bottom: error && touched ? -20 : -18, right: 0,
+          fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em",
+          color: value.length > maxLength * 0.8 ? accent : "rgba(255,255,255,0.18)",
+        }}>
+          {value.length}/{maxLength}
+        </p>
+      )}
+    </div>
+  );
+};
+
+/* ─── Contact ────────────────────────────────────────────────── */
+const Contact = () => {
+  const heroRef        = useRef(null);
+  const foldRef        = useRef(null);
+  const formSectionRef = useRef(null);
+  const taglineRef     = useRef(null);
+  const pillRef1       = useRef(null);
+  const pillRef2       = useRef(null);
+  const infoRef        = useRef(null);
+  const formElem       = useRef(null);
+
+  const [scramble, setScramble] = useState(false);
+  const line1Ref = useScramble("LET'S", scramble);
+  const line2Ref = useScramble("TALK.", scramble);
+
+  /* Form state */
+  const [fd, setFd]     = useState({ name: "", email: "", message: "" });
+  const [fe, setFe]     = useState({});
+  const [ft, setFt]     = useState({});
+  const [sending, setSending] = useState(false);
+  const [status, setStatus]   = useState(null);
+
+  const validate = (n, v) => {
+    if (n === "name")    return !v.trim() ? "Required" : v.trim().length < 2 ? "Min 2 chars" : "";
+    if (n === "email")   return !v.trim() ? "Required" : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? "Invalid format" : "";
+    if (n === "message") return !v.trim() ? "Required" : v.trim().length < 10 ? "Min 10 chars" : "";
+    return "";
+  };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFd(p => ({ ...p, [name]: value }));
+    if (ft[name]) setFe(p => ({ ...p, [name]: validate(name, value) }));
+  };
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setFt(p => ({ ...p, [name]: true }));
+    setFe(p => ({ ...p, [name]: validate(name, value) }));
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const errors = {};
+    Object.keys(fd).forEach(k => { const err = validate(k, fd[k]); if (err) errors[k] = err; });
+    setFe(errors); setFt({ name: true, email: true, message: true });
+    if (Object.keys(errors).length) {
+      gsap.timeline()
+        .to(formElem.current, { x: -8, duration: 0.07 })
+        .to(formElem.current, { x: 8,  duration: 0.07 })
+        .to(formElem.current, { x: -5, duration: 0.07 })
+        .to(formElem.current, { x: 0,  duration: 0.07 });
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          access_key: "3cf7a9c6-0d4d-43d9-bb80-42b291901303",
+          name: fd.name, email: fd.email, message: fd.message,
+          subject: `Portfolio contact from ${fd.name}`,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus("ok"); setFd({ name: "", email: "", message: "" }); setFt({});
+        setTimeout(() => setStatus(null), 5000);
+      } else throw new Error();
+    } catch { setStatus("err"); setTimeout(() => setStatus(null), 5000); }
+    finally   { setSending(false); }
+  };
+
+  /* ── GSAP animations ── */
+  useGSAP(() => {
+    const ctx = gsap.context(() => {
+
+      // Trigger scramble on enter
+      ScrollTrigger.create({
+        trigger: heroRef.current,
+        start: "top 80%",
+        once: true,
+        onEnter: () => setScramble(true),
+      });
+
+      // Headline rise
+      gsap.from([line1Ref.current, line2Ref.current], {
+        yPercent: 120, opacity: 0, stagger: 0.15, duration: 1.2, ease: "power4.out",
+        scrollTrigger: { trigger: heroRef.current, start: "top 78%", once: true },
+      });
+
+      // Text-image pill width expand (ref 4 technique)
+      [pillRef1.current, pillRef2.current].filter(Boolean).forEach((pill) => {
+        gsap.to(pill, {
+          width: window.innerWidth < 640 ? 0 : window.innerWidth < 1024 ? 85 : 120,
+          ease: "none",
+          scrollTrigger: {
+            trigger: taglineRef.current,
+            start: "top 88%",
+            end: "top 42%",
+            scrub: 1.2,
+          },
+        });
+      });
+
+      // Pin hero panel — stays until form section reaches top
+      ScrollTrigger.create({
+        trigger: heroRef.current,
+        start: "top top",
+        endTrigger: formSectionRef.current,
+        end: "top top",
+        pin: true,
+        pinSpacing: false,
+      });
+
+      // As form slides up, fold card back in 3D (ref: 3D Section ST)
+      ScrollTrigger.create({
+        trigger: formSectionRef.current,
+        start: "top bottom",
+        end: "top top",
+        onUpdate: (self) => {
+          const p = self.progress;
+          gsap.set(foldRef.current, {
+            scale: 1 - p * 0.1,
+            rotationX: p * 32,
+            z: -850 * p,
+            opacity: 1 - p * 0.9,
+            transformOrigin: "center top",
+          });
+        },
+      });
+
+      // Form section rises
+      gsap.from(formSectionRef.current, {
+        y: 70, opacity: 0, duration: 1.1, ease: "power3.out",
+        scrollTrigger: { trigger: formSectionRef.current, start: "top 82%", once: true },
+      });
+
+      // Info items stagger in
+      if (infoRef.current) {
+        gsap.from(Array.from(infoRef.current.children), {
+          y: 30, opacity: 0, stagger: 0.09, duration: 0.7, ease: "power2.out",
+          scrollTrigger: { trigger: infoRef.current, start: "top 84%", once: true },
+        });
+      }
+
+    });
+    return () => ctx.revert();
+  }, []);
+
+  const marqueeItems = Array(5).fill("let's collaborate");
+
+  return (
+    <section id="contact" className="relative bg-secondary overflow-x-hidden">
+
+      {/* ══ HERO PANEL — pinned, folds back on scroll ══ */}
+      <div
+        ref={heroRef}
+        className="relative w-full h-screen overflow-hidden"
+        style={{ perspective: "1100px" }}
+      >
+        {/* UnicornStudio animated background */}
+        <div className="absolute inset-0 z-0">
+          <ContactScene />
+        </div>
+
+        {/* Vignette overlay */}
+        <div className="absolute inset-0 z-[1] pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at center, rgba(10,10,10,0.3) 0%, rgba(10,10,10,0.78) 100%)" }} />
+
+        {/* Grid */}
+        <div className="absolute inset-0 z-[2] pointer-events-none opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(0,255,136,1) 1px,transparent 1px)," +
+              "linear-gradient(90deg,rgba(0,255,136,1) 1px,transparent 1px)",
+            backgroundSize: "60px 60px",
+          }} />
+
+        {/* 3D-foldable card content */}
+        <div
+          ref={foldRef}
+          className="relative z-10 flex flex-col items-center justify-center h-full"
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          {/* Section label */}
+          <div className="absolute top-8 left-8 sm:top-10 sm:left-10 flex items-center gap-3">
+            <div className="w-6 h-px" style={{ background: "#00d4ff" }} />
+            <span className="font-mono uppercase tracking-[0.4em]"
+              style={{ fontSize: 10, color: "rgba(0,212,255,0.6)" }}>
+              05 · Contact
+            </span>
+          </div>
+
+          {/* Corner markers */}
+          {[
+            { top: 32, left: 32,    borderTop: "1px solid rgba(255,255,255,0.12)", borderLeft: "1px solid rgba(255,255,255,0.12)" },
+            { top: 32, right: 32,   borderTop: "1px solid rgba(255,255,255,0.12)", borderRight: "1px solid rgba(255,255,255,0.12)" },
+            { bottom: 32, left: 32, borderBottom: "1px solid rgba(255,255,255,0.12)", borderLeft: "1px solid rgba(255,255,255,0.12)" },
+            { bottom: 32, right: 32,borderBottom: "1px solid rgba(255,255,255,0.12)", borderRight: "1px solid rgba(255,255,255,0.12)" },
+          ].map((s, i) => (
+            <div key={i} className="absolute w-7 h-7" style={s} />
+          ))}
+
+          {/* Giant headline */}
+          <div className="text-center px-6 select-none">
+            <div className="overflow-hidden mb-1">
+              <h2 ref={line1Ref} className="font-display font-bold uppercase"
+                style={{ fontSize: "clamp(4.5rem,15vw,13rem)", lineHeight: 0.9, letterSpacing: "-0.03em", color: "#e5e5e5" }}>
+                LET'S
+              </h2>
+            </div>
+            <div className="overflow-hidden">
+              <h2 ref={line2Ref} className="font-display font-bold uppercase"
+                style={{
+                  fontSize: "clamp(4.5rem,15vw,13rem)", lineHeight: 0.9, letterSpacing: "-0.03em",
+                  color: "transparent", WebkitTextStroke: "1.5px #00d4ff",
+                  textShadow: "0 0 100px rgba(0,212,255,0.15)",
+                }}>
+                TALK.
+              </h2>
+            </div>
+
+            {/* Tagline with image pills (ref 4) */}
+            <div ref={taglineRef}
+              className="flex flex-wrap items-center justify-center gap-3 mt-8 sm:mt-10"
+              style={{ maxWidth: 660, margin: "2rem auto 0" }}>
+              <span className="font-mono uppercase tracking-[0.2em] text-white/40"
+                style={{ fontSize: "clamp(0.65rem,1.3vw,0.85rem)" }}>Let's build</span>
+
+              <span ref={pillRef1} className="hidden sm:inline-block overflow-hidden flex-shrink-0"
+                style={{ width: 0, height: "clamp(1.6rem,3vw,2.8rem)", borderRadius: 4, verticalAlign: "middle" }}>
+                <img src="/assets/projects/codexspace.jpg" alt=""
+                  className="h-full object-cover"
+                  style={{ width: 200, position: "relative", left: "50%", transform: "translateX(-50%)" }} />
+              </span>
+
+              <span className="font-mono uppercase tracking-[0.2em] text-white/40"
+                style={{ fontSize: "clamp(0.65rem,1.3vw,0.85rem)" }}>something</span>
+
+              <span ref={pillRef2} className="hidden sm:inline-block overflow-hidden flex-shrink-0"
+                style={{ width: 0, height: "clamp(1.6rem,3vw,2.8rem)", borderRadius: 4, verticalAlign: "middle" }}>
+                <img src="/assets/projects/hyperspace.jpg" alt=""
+                  className="h-full object-cover"
+                  style={{ width: 200, position: "relative", left: "50%", transform: "translateX(-50%)" }} />
+              </span>
+
+              <span className="font-mono uppercase tracking-[0.2em]"
+                style={{ fontSize: "clamp(0.65rem,1.3vw,0.85rem)", color: "#00d4ff" }}>extraordinary.</span>
+            </div>
+          </div>
+
+          {/* Scroll hint */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-35">
+            <div className="w-px h-12 overflow-hidden relative" style={{ background: "rgba(255,255,255,0.07)" }}>
+              <div className="absolute inset-0"
+                style={{
+                  background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.5), transparent)",
+                  animation: "scrollBar 1.8s ease-in-out infinite",
+                }} />
+            </div>
+            <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-white/25">Scroll</span>
+          </div>
+        </div>
       </div>
-      <div className="absolute top-20 left-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent-blue/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "3s" }} />
 
-      <div className="relative z-10">
-        <AnimatedHeaderSection
-          subTitle={"Get In Touch"}
-          title={"Let's Create"}
-          text={text}
-          textColor={"text-text"}
-          withScrollTrigger={true}
-        />
+      {/* ══ FORM SECTION — slides up beneath the fold ══ */}
+      <div
+        ref={formSectionRef}
+        className="relative bg-secondary z-20"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px)," +
+            "linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      >
+        {/* Ambient orbs */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] pointer-events-none"
+          style={{ background: "radial-gradient(circle at top right,rgba(0,212,255,0.055) 0%,transparent 65%)" }} />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] pointer-events-none"
+          style={{ background: "radial-gradient(circle at bottom left,rgba(0,255,136,0.05) 0%,transparent 65%)" }} />
 
-        {/* Enhanced Interactive Contact Form */}
-        <div className="px-10 mb-16">
-          <div className="max-w-4xl mx-auto">
-            <form 
-              ref={formRef}
-              onSubmit={handleSubmit}
-              className="contact-form relative p-8 md:p-12 rounded-3xl bg-gradient-to-br from-primary/50 to-secondary/50 border-2 border-border/50 backdrop-blur-sm overflow-hidden"
-            >
-              {/* Background pattern */}
-              <div className="absolute inset-0 opacity-5">
-                <div className="grid-bg w-full h-full" />
+        <div className="relative z-10 px-6 sm:px-10 md:px-14 pt-20 sm:pt-24 md:pt-28 pb-0 max-w-[1400px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-20">
+
+            {/* ── LEFT: Info block ── */}
+            <div ref={infoRef} className="flex flex-col gap-8 pb-4">
+
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-px" style={{ background: "#00d4ff" }} />
+                <span className="font-mono uppercase tracking-[0.38em]"
+                  style={{ fontSize: 10, color: "rgba(0,212,255,0.5)" }}>Start a conversation</span>
               </div>
 
-              {/* Animated gradient orb */}
-              <div className="absolute -top-24 -right-24 w-64 h-64 bg-accent/20 rounded-full blur-3xl animate-pulse" />
-              
-              <div className="relative z-10 space-y-8">
-                {/* Form Header */}
-                <div className="mb-10">
-                  <h3 className="text-3xl md:text-4xl font-display font-bold mb-3 bg-gradient-to-r from-accent to-accent-blue bg-clip-text text-transparent">
-                    Send a Message
-                  </h3>
-                  <p className="text-text-dim font-mono text-sm">
-                    Fill out the form below and I'll get back to you within 24 hours
+              <h3 className="font-display font-bold uppercase leading-[0.9]"
+                style={{ fontSize: "clamp(2rem,5vw,4.5rem)", letterSpacing: "-0.02em", color: "#e5e5e5" }}>
+                Got a<br />
+                <span style={{ color: "transparent", WebkitTextStroke: "1px rgba(0,255,136,0.65)" }}>
+                  Project?
+                </span>
+              </h3>
+
+              <p className="font-mono leading-[1.85] max-w-xs"
+                style={{ fontSize: 13, color: "rgba(229,229,229,0.38)", letterSpacing: "0.04em" }}>
+                I'm always open to discussing new opportunities and building
+                something extraordinary together. Let's make it happen.
+              </p>
+
+              <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+
+              {/* Email */}
+              <div>
+                <p className="font-mono uppercase tracking-[0.3em] mb-2"
+                  style={{ fontSize: 10, color: "rgba(0,255,136,0.5)" }}>Email</p>
+                <a href="mailto:rajanshu2123@gmail.com" className="font-mono transition-colors duration-300"
+                  style={{ fontSize: "clamp(0.85rem,1.4vw,0.98rem)", color: "rgba(229,229,229,0.5)", letterSpacing: "0.04em", textDecoration: "none" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#00ff88")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(229,229,229,0.5)")}>
+                  rajanshu2123@gmail.com
+                </a>
+              </div>
+
+              {/* Location */}
+              <div>
+                <p className="font-mono uppercase tracking-[0.3em] mb-2"
+                  style={{ fontSize: 10, color: "rgba(0,212,255,0.5)" }}>Location</p>
+                <p className="font-mono"
+                  style={{ fontSize: "clamp(0.85rem,1.4vw,0.98rem)", color: "rgba(229,229,229,0.5)", letterSpacing: "0.04em" }}>
+                  Bokaro Steel City, Jharkhand, India
+                </p>
+              </div>
+
+              {/* Socials */}
+              <div>
+                <p className="font-mono uppercase tracking-[0.3em] mb-3"
+                  style={{ fontSize: 10, color: "rgba(183,123,255,0.5)" }}>Connect</p>
+                <div className="flex flex-wrap gap-2">
+                  {socials.map((s, i) => (
+                    <a key={i} href={s.href} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 font-mono uppercase"
+                      style={{
+                        fontSize: 10, letterSpacing: "0.2em", padding: "7px 14px",
+                        border: "1px solid rgba(255,255,255,0.08)", borderRadius: 2,
+                        color: "rgba(229,229,229,0.42)", textDecoration: "none", transition: "all 0.3s",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "#e5e5e5"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(229,229,229,0.42)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}>
+                      {s.name}
+                      <Icon icon="lucide:arrow-up-right" style={{ width: 10 }} />
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Resume */}
+              <Magnetic strength={0.1}>
+                <a href="/resume/anshu-raj-resume.pdf" download
+                  className="group inline-flex items-center gap-3 font-mono uppercase"
+                  style={{
+                    fontSize: 11, letterSpacing: "0.2em", padding: "12px 22px",
+                    border: "1px solid rgba(0,255,136,0.28)", borderRadius: 2,
+                    color: "#00ff88", textDecoration: "none",
+                    background: "rgba(0,255,136,0.04)", transition: "all 0.3s ease",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,255,136,0.09)"; e.currentTarget.style.borderColor = "rgba(0,255,136,0.55)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(0,255,136,0.1)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(0,255,136,0.04)"; e.currentTarget.style.borderColor = "rgba(0,255,136,0.28)"; e.currentTarget.style.boxShadow = "none"; }}>
+                  <Icon icon="lucide:file-text" style={{ width: 13 }} />
+                  Download Resume
+                  <Icon icon="lucide:download" className="group-hover:translate-y-0.5 transition-transform duration-300" style={{ width: 12 }} />
+                </a>
+              </Magnetic>
+            </div>
+
+            {/* ── RIGHT: Form ── */}
+            <div>
+              <form ref={formElem} onSubmit={handleSubmit} className="flex flex-col gap-9">
+
+                <div className="pb-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <p className="font-mono uppercase tracking-[0.38em]"
+                    style={{ fontSize: 10, color: "rgba(229,229,229,0.22)" }}>Send a message</p>
+                </div>
+
+                <Magnetic strength={0.05}>
+                  <Field id="name" name="name" label="Your Name"
+                    value={fd.name} onChange={handleChange} onBlur={handleBlur}
+                    error={fe.name} touched={ft.name} accent="#00ff88" />
+                </Magnetic>
+
+                <Magnetic strength={0.05}>
+                  <Field id="email" name="email" label="Email Address" type="email"
+                    value={fd.email} onChange={handleChange} onBlur={handleBlur}
+                    error={fe.email} touched={ft.email} accent="#00d4ff" />
+                </Magnetic>
+
+                <Magnetic strength={0.03}>
+                  <Field id="message" name="message" label="Your Message"
+                    value={fd.message} onChange={handleChange} onBlur={handleBlur}
+                    error={fe.message} touched={ft.message}
+                    accent="#b77bff" multiline rows={5} maxLength={500} />
+                </Magnetic>
+
+                <div className="pt-2">
+                  <Magnetic strength={0.18}>
+                    <button type="submit" disabled={sending || status === "ok"}
+                      className="group relative w-full overflow-hidden font-display font-bold uppercase"
+                      style={{
+                        padding: "18px 0", border: "none", borderRadius: 2,
+                        letterSpacing: "0.22em", fontSize: "clamp(0.82rem,1.4vw,0.95rem)",
+                        outline: `1.5px solid ${status === "err" ? "rgba(239,68,68,0.4)" : "rgba(0,255,136,0.3)"}`,
+                        background: status === "err" ? "rgba(239,68,68,0.08)" : "rgba(0,255,136,0.05)",
+                        color: status === "err" ? "#ef4444" : status === "ok" ? "#00ff88" : "#e5e5e5",
+                        cursor: sending ? "wait" : "pointer", transition: "all 0.35s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (status) return;
+                        e.currentTarget.style.background = "rgba(0,255,136,0.11)";
+                        e.currentTarget.style.outlineColor = "rgba(0,255,136,0.62)";
+                        e.currentTarget.style.boxShadow = "0 0 40px rgba(0,255,136,0.1),inset 0 0 30px rgba(0,255,136,0.04)";
+                        e.currentTarget.style.color = "#00ff88";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (status) return;
+                        e.currentTarget.style.background = "rgba(0,255,136,0.05)";
+                        e.currentTarget.style.outlineColor = "rgba(0,255,136,0.3)";
+                        e.currentTarget.style.boxShadow = "none";
+                        e.currentTarget.style.color = "#e5e5e5";
+                      }}>
+                      <span className="relative z-10 flex items-center justify-center gap-3">
+                        {sending ? (
+                          <><Icon icon="lucide:loader-2" className="animate-spin" style={{ width: 15 }} />Sending</>
+                        ) : status === "ok" ? (
+                          <><Icon icon="lucide:check" style={{ width: 15 }} />Message Sent!</>
+                        ) : status === "err" ? (
+                          <><Icon icon="lucide:x" style={{ width: 15 }} />Failed — Try Again</>
+                        ) : (
+                          <>Send Message
+                            <Icon icon="lucide:send"
+                              className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
+                              style={{ width: 14 }} />
+                          </>
+                        )}
+                      </span>
+                    </button>
+                  </Magnetic>
+                  <p className="mt-4 font-mono text-center"
+                    style={{ fontSize: 10, color: "rgba(229,229,229,0.17)", letterSpacing: "0.12em" }}>
+                    I reply within 24 hours · No spam, ever
                   </p>
                 </div>
-
-                {/* Name Field */}
-                <div className="relative group">
-                  <label 
-                    htmlFor="name" 
-                    className="block text-sm font-mono text-accent mb-3 uppercase tracking-wider flex items-center gap-2"
-                  >
-                    <Icon icon="lucide:user" className="w-4 h-4" />
-                    Your Name *
-                  </label>
-                  <div 
-                    ref={nameInputRef}
-                    className="relative"
-                  >
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      onFocus={() => handleFocus(nameInputRef)}
-                      onBlurCapture={() => handleFocusOut(nameInputRef)}
-                      className={`w-full px-6 py-4 bg-primary/50 border-2 rounded-xl text-text placeholder-text-dim font-mono text-base transition-all duration-300 focus:outline-none focus:border-accent focus:shadow-lg focus:shadow-accent/20 ${
-                        formErrors.name && formTouched.name 
-                          ? 'border-red-500 focus:border-red-500' 
-                          : 'border-border focus:border-accent'
-                      }`}
-                      placeholder="John Doe"
-                    />
-                    
-                    {/* Animated border on focus */}
-                    <div className="absolute inset-0 rounded-xl pointer-events-none">
-                      <div className={`absolute inset-0 rounded-xl bg-gradient-to-r from-accent via-accent-blue to-accent-purple opacity-0 blur transition-opacity duration-300 ${
-                        formTouched.name && !formErrors.name ? 'opacity-20' : ''
-                      }`} />
-                    </div>
-
-                    {/* Success checkmark */}
-                    {formTouched.name && !formErrors.name && formData.name && (
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                        <Icon icon="lucide:check-circle" className="w-5 h-5 text-accent animate-scale-in" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Error message */}
-                  {formErrors.name && formTouched.name && (
-                    <div className="mt-2 flex items-center gap-2 text-red-500 text-sm font-mono animate-shake">
-                      <Icon icon="lucide:alert-circle" className="w-4 h-4" />
-                      {formErrors.name}
-                    </div>
-                  )}
-                </div>
-
-                {/* Email Field */}
-                <div className="relative group">
-                  <label 
-                    htmlFor="email" 
-                    className="block text-sm font-mono text-accent-blue mb-3 uppercase tracking-wider flex items-center gap-2"
-                  >
-                    <Icon icon="lucide:mail" className="w-4 h-4" />
-                    Email Address *
-                  </label>
-                  <div 
-                    ref={emailInputRef}
-                    className="relative"
-                  >
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      onFocus={() => handleFocus(emailInputRef)}
-                      onBlurCapture={() => handleFocusOut(emailInputRef)}
-                      className={`w-full px-6 py-4 bg-primary/50 border-2 rounded-xl text-text placeholder-text-dim font-mono text-base transition-all duration-300 focus:outline-none focus:border-accent-blue focus:shadow-lg focus:shadow-accent-blue/20 ${
-                        formErrors.email && formTouched.email 
-                          ? 'border-red-500 focus:border-red-500' 
-                          : 'border-border focus:border-accent-blue'
-                      }`}
-                      placeholder="john@example.com"
-                    />
-                    
-                    <div className="absolute inset-0 rounded-xl pointer-events-none">
-                      <div className={`absolute inset-0 rounded-xl bg-gradient-to-r from-accent-blue via-accent to-accent-purple opacity-0 blur transition-opacity duration-300 ${
-                        formTouched.email && !formErrors.email ? 'opacity-20' : ''
-                      }`} />
-                    </div>
-
-                    {formTouched.email && !formErrors.email && formData.email && (
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                        <Icon icon="lucide:check-circle" className="w-5 h-5 text-accent-blue animate-scale-in" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {formErrors.email && formTouched.email && (
-                    <div className="mt-2 flex items-center gap-2 text-red-500 text-sm font-mono animate-shake">
-                      <Icon icon="lucide:alert-circle" className="w-4 h-4" />
-                      {formErrors.email}
-                    </div>
-                  )}
-                </div>
-
-                {/* Message Field with Character Count */}
-                <div className="relative group">
-                  <div className="flex justify-between items-center mb-3">
-                    <label 
-                      htmlFor="message" 
-                      className="text-sm font-mono text-accent-purple uppercase tracking-wider flex items-center gap-2"
-                    >
-                      <Icon icon="lucide:message-square" className="w-4 h-4" />
-                      Message *
-                    </label>
-                    <div className={`text-xs font-mono transition-colors duration-300 ${
-                      messageStats.isNearLimit ? 'text-accent' : 'text-text-dim'
-                    }`}>
-                      <span className={messageStats.count > messageCharLimit ? 'text-red-500' : ''}>
-                        {messageStats.count}
-                      </span>
-                      <span className="text-text-dim">/{messageCharLimit}</span>
-                    </div>
-                  </div>
-                  <div 
-                    ref={messageInputRef}
-                    className="relative"
-                  >
-                    <textarea
-                      id="message"
-                      name="message"
-                      value={formData.message}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      onFocus={() => handleFocus(messageInputRef)}
-                      onBlurCapture={() => handleFocusOut(messageInputRef)}
-                      rows="6"
-                      maxLength={messageCharLimit}
-                      className={`w-full px-6 py-4 bg-primary/50 border-2 rounded-xl text-text placeholder-text-dim font-mono text-base transition-all duration-300 focus:outline-none focus:border-accent-purple focus:shadow-lg focus:shadow-accent-purple/20 resize-none ${
-                        formErrors.message && formTouched.message 
-                          ? 'border-red-500 focus:border-red-500' 
-                          : 'border-border focus:border-accent-purple'
-                      }`}
-                      placeholder="Tell me about your project..."
-                    />
-                    
-                    {/* Character count progress bar */}
-                    <div className="absolute bottom-2 left-2 right-2 h-1 bg-border/30 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-300 ${
-                          messageStats.percentage > 100 ? 'bg-red-500' :
-                          messageStats.isNearLimit ? 'bg-accent' : 'bg-accent-purple'
-                        }`}
-                        style={{ width: `${Math.min(messageStats.percentage, 100)}%` }}
-                      />
-                    </div>
-
-                    <div className="absolute inset-0 rounded-xl pointer-events-none">
-                      <div className={`absolute inset-0 rounded-xl bg-gradient-to-r from-accent-purple via-accent to-accent-blue opacity-0 blur transition-opacity duration-300 ${
-                        formTouched.message && !formErrors.message ? 'opacity-20' : ''
-                      }`} />
-                    </div>
-
-                    {formTouched.message && !formErrors.message && formData.message && (
-                      <div className="absolute right-4 top-4">
-                        <Icon icon="lucide:check-circle" className="w-5 h-5 text-accent-purple animate-scale-in" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {formErrors.message && formTouched.message && (
-                    <div className="mt-2 flex items-center gap-2 text-red-500 text-sm font-mono animate-shake">
-                      <Icon icon="lucide:alert-circle" className="w-4 h-4" />
-                      {formErrors.message}
-                    </div>
-                  )}
-                </div>
-
-                {/* Submit Button with States */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting || submitStatus === 'success'}
-                  className={`group relative w-full md:w-auto px-10 py-5 rounded-xl font-display font-bold text-lg overflow-hidden transition-all duration-500 ${
-                    isSubmitting 
-                      ? 'bg-text-dim cursor-wait scale-95' 
-                      : submitStatus === 'success'
-                      ? 'bg-accent text-primary scale-100'
-                      : submitStatus === 'error'
-                      ? 'bg-red-500 text-white'
-                      : 'bg-accent text-primary hover:scale-105 hover:shadow-2xl hover:shadow-accent/50'
-                  }`}
-                >
-                  <span className="relative z-10 flex items-center justify-center gap-3">
-                    {isSubmitting ? (
-                      <>
-                        <Icon icon="lucide:loader-2" className="w-5 h-5 animate-spin" />
-                        Sending...
-                      </>
-                    ) : submitStatus === 'success' ? (
-                      <>
-                        <Icon icon="lucide:check-circle" className="w-5 h-5" />
-                        Message Sent!
-                      </>
-                    ) : submitStatus === 'error' ? (
-                      <>
-                        <Icon icon="lucide:x-circle" className="w-5 h-5" />
-                        Failed. Try Again
-                      </>
-                    ) : (
-                      <>
-                        Send Message
-                        <Icon icon="lucide:send" className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" />
-                      </>
-                    )}
-                  </span>
-                  
-                  {/* Shimmer effect */}
-                  {!isSubmitting && submitStatus !== 'success' && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        {/* Original contact info */}
-        <div className="flex px-10 font-light text-text uppercase lg:text-[32px] text-[26px] leading-none mb-10">
-          <div className="flex flex-col w-full gap-10">
-            {/* Email */}
-            <div className="social-link group">
-              <div className="flex items-center gap-3 mb-2">
-                <Icon icon="lucide:mail" className="text-accent" />
-                <h2 className="font-display">E-mail</h2>
-              </div>
-              <div className="w-full h-px my-3 bg-gradient-to-r from-border via-accent to-border" />
-              <a
-                href="mailto:rajanshu2123@gmail.com"
-                className="block text-xl md:text-2xl lg:text-3xl tracking-wider lowercase text-text-dim hover:text-accent transition-colors duration-300 font-mono"
-              >
-                rajanshu2123@gmail.com
-              </a>
-            </div>
-
-            {/* Location */}
-            <div className="social-link group">
-              <div className="flex items-center gap-3 mb-2">
-                <Icon icon="lucide:map-pin" className="text-accent-blue" />
-                <h2 className="font-display">Location</h2>
-              </div>
-              <div className="w-full h-px my-3 bg-gradient-to-r from-border via-accent-blue to-border" />
-              <p className="text-xl md:text-2xl lg:text-3xl text-text-dim font-mono">
-                Bokaro Steel City, Jharkhand, India
-              </p>
-            </div>
-
-            {/* Social Media */}
-            <div className="social-link group">
-              <div className="flex items-center gap-3 mb-2">
-                <Icon icon="lucide:share-2" className="text-accent-purple" />
-                <h2 className="font-display">Connect</h2>
-              </div>
-              <div className="w-full h-px my-3 bg-gradient-to-r from-border via-accent-purple to-border" />
-              <div className="flex flex-wrap gap-4">
-                {socials.map((social, index) => (
-                  <a
-                    key={index}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group/link relative px-4 py-2 overflow-hidden text-sm md:text-base leading-loose tracking-wider uppercase transition-all duration-300 border border-border rounded-lg hover:border-accent"
-                  >
-                    <span className="relative z-10 font-mono text-text group-hover/link:text-primary transition-colors duration-300">
-                      {social.name}
-                    </span>
-                    <div className="absolute inset-0 bg-accent transform scale-x-0 group-hover/link:scale-x-100 transition-transform duration-300 origin-left" />
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Resume Download */}
-            <div className="social-link group">
-              <div className="flex items-center gap-3 mb-2">
-                <Icon icon="lucide:download" className="text-accent" />
-                <h2 className="font-display">Resume</h2>
-              </div>
-              <div className="w-full h-px my-3 bg-gradient-to-r from-border via-accent to-border" />
-              <a
-                href="/resume/anshu-raj-resume.pdf"
-                download
-                className="inline-flex items-center gap-3 px-6 py-3 text-base md:text-lg font-mono bg-accent text-primary rounded-lg hover:bg-accent-blue transition-all duration-300 shadow-lg hover:shadow-accent/50"
-              >
-                <Icon icon="lucide:file-text" />
-                Download Resume
-              </a>
+              </form>
             </div>
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-10 mb-16">
-          <div className="p-4 rounded-lg bg-primary/30 border border-border text-center">
-            <div className="text-2xl font-bold text-accent font-display">2+</div>
-            <div className="text-sm text-text-dim font-mono">Years Coding</div>
-          </div>
-          <div className="p-4 rounded-lg bg-primary/30 border border-border text-center">
-            <div className="text-2xl font-bold text-accent-blue font-display">500+</div>
-            <div className="text-sm text-text-dim font-mono">Problems Solved</div>
-          </div>
-          <div className="p-4 rounded-lg bg-primary/30 border border-border text-center">
-            <div className="text-2xl font-bold text-accent-purple font-display">20+</div>
-            <div className="text-sm text-text-dim font-mono">Projects Live</div>
-          </div>
-          <div className="p-4 rounded-lg bg-primary/30 border border-border text-center">
-            <div className="text-2xl font-bold text-accent font-display">100%</div>
-            <div className="text-sm text-text-dim font-mono">Dedication</div>
+        {/* Marquee */}
+        <div className="mt-20">
+          <Marquee items={marqueeItems}
+            className="text-text bg-transparent border-y-2 border-accent/20"
+            icon="material-symbols:code" iconClassName="text-accent" />
+        </div>
+
+        {/* Footer */}
+        <div className="relative z-10 px-6 sm:px-10 md:px-14 py-8"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 max-w-[1400px] mx-auto">
+            <p className="font-mono" style={{ fontSize: 11, color: "rgba(229,229,229,0.2)", letterSpacing: "0.08em" }}>
+              © 2025 Anshu Raj
+            </p>
+            <p className="font-mono" style={{ fontSize: 11, color: "rgba(229,229,229,0.2)", letterSpacing: "0.08em" }}>
+              Built with React · Three.js · GSAP · Tailwind
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Bottom Marquee with new variant */}
-      <Marquee 
-        items={items} 
-        className="text-text bg-transparent border-y-2 border-accent/30" 
-        icon="material-symbols:code"
-        iconClassName="text-accent"
-        variant="gradient"
-      />
-
-      {/* Footer */}
-      <div className="relative z-10 px-10 py-8 border-t border-border">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-text-dim font-mono">
-            © 2025 Anshu Raj. Crafted with 💚 and ☕
-          </p>
-          <p className="text-sm text-text-dim font-mono">
-            Built with React, Three.js, GSAP & Tailwind
-          </p>
-        </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
-        }
-        @keyframes scale-in {
-          0% { transform: scale(0); }
-          50% { transform: scale(1.2); }
-          100% { transform: scale(1); }
-        }
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-        .animate-scale-in {
-          animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+      <style>{`
+        @keyframes scrollBar { 0%{transform:translateY(-100%)} 100%{transform:translateY(200%)} }
+        textarea { scrollbar-width: none; }
+        textarea::-webkit-scrollbar { display: none; }
       `}</style>
     </section>
   );
