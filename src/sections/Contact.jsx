@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -113,6 +112,10 @@ const Field = ({ id, name, label, type = "text", value, onChange, onBlur,
       padding: "18px 0 10px", color: "#e5e5e5",
       fontFamily: "var(--font-mono)", fontSize: "clamp(0.85rem,1.4vw,0.95rem)",
       outline: "none", resize: "none", letterSpacing: "0.02em",
+      /* Fix: hide textarea scrollbar */
+      scrollbarWidth: "none",
+      msOverflowStyle: "none",
+      overflowY: multiline ? "auto" : undefined,
     },
   };
 
@@ -153,6 +156,7 @@ const Field = ({ id, name, label, type = "text", value, onChange, onBlur,
 
 /* ─── Contact ────────────────────────────────────────────────── */
 const Contact = () => {
+  const sectionRef     = useRef(null);   // FIX: wrap everything so overflow is contained
   const heroRef        = useRef(null);
   const foldRef        = useRef(null);
   const formSectionRef = useRef(null);
@@ -234,27 +238,31 @@ const Contact = () => {
         onEnter: () => setScramble(true),
       });
 
-      // Headline rise
+      // Headline rise — slightly slower for polish
       gsap.from([line1Ref.current, line2Ref.current], {
-        yPercent: 120, opacity: 0, stagger: 0.15, duration: 1.2, ease: "power4.out",
+        yPercent: 120,
+        opacity: 0,
+        stagger: 0.18,
+        duration: 1.5,
+        ease: "power4.out",
         scrollTrigger: { trigger: heroRef.current, start: "top 78%", once: true },
       });
 
-      // Text-image pill width expand (ref 4 technique)
+      // Text-image pill width expand — smoother scrub
       [pillRef1.current, pillRef2.current].filter(Boolean).forEach((pill) => {
         gsap.to(pill, {
           width: window.innerWidth < 640 ? 0 : window.innerWidth < 1024 ? 85 : 120,
           ease: "none",
           scrollTrigger: {
             trigger: taglineRef.current,
-            start: "top 88%",
-            end: "top 42%",
-            scrub: 1.2,
+            start: "top 90%",
+            end: "top 35%",
+            scrub: 2,           // FIX: was 1.2 — more damping = smoother
           },
         });
       });
 
-      // Pin hero panel — stays until form section reaches top
+      // FIX: Pin hero with anticipatePin + pinSpacing false
       ScrollTrigger.create({
         trigger: heroRef.current,
         start: "top top",
@@ -262,36 +270,56 @@ const Contact = () => {
         end: "top top",
         pin: true,
         pinSpacing: false,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
       });
 
-      // As form slides up, fold card back in 3D (ref: 3D Section ST)
-      ScrollTrigger.create({
-        trigger: formSectionRef.current,
-        start: "top bottom",
-        end: "top top",
-        onUpdate: (self) => {
-          const p = self.progress;
-          gsap.set(foldRef.current, {
-            scale: 1 - p * 0.1,
-            rotationX: p * 32,
-            z: -850 * p,
-            opacity: 1 - p * 0.9,
-            transformOrigin: "center top",
-          });
+      // FIX: Replace onUpdate+gsap.set with a proper scrub timeline.
+      // Previously the fold was 1:1 with raw scroll progress (no easing/damping).
+      // A scrub timeline runs through GSAP's tick loop with lag smoothing.
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: formSectionRef.current,
+          start: "top bottom",
+          end: "top top",
+          scrub: 2.5,           // FIX: high scrub = heavily lagged/smooth
+          invalidateOnRefresh: true,
+        },
+      }).to(foldRef.current, {
+        scale: 0.9,
+        rotationX: 28,          // slightly reduced angle looks cleaner
+        z: -700,
+        opacity: 0.08,
+        transformOrigin: "center top",
+        ease: "power1.inOut",   // FIX: add ease — raw "none" felt mechanical
+      });
+
+      // Form section rises — give it room to breathe
+      gsap.from(formSectionRef.current, {
+        y: 60,
+        opacity: 0,
+        duration: 1.4,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: formSectionRef.current,
+          start: "top 88%",     // FIX: earlier start so it doesn't rush
+          once: true,
         },
       });
 
-      // Form section rises
-      gsap.from(formSectionRef.current, {
-        y: 70, opacity: 0, duration: 1.1, ease: "power3.out",
-        scrollTrigger: { trigger: formSectionRef.current, start: "top 82%", once: true },
-      });
-
-      // Info items stagger in
+      // Info items stagger in — slightly slower stagger
       if (infoRef.current) {
         gsap.from(Array.from(infoRef.current.children), {
-          y: 30, opacity: 0, stagger: 0.09, duration: 0.7, ease: "power2.out",
-          scrollTrigger: { trigger: infoRef.current, start: "top 84%", once: true },
+          y: 30,
+          opacity: 0,
+          stagger: 0.12,        // FIX: was 0.09
+          duration: 0.9,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: infoRef.current,
+            start: "top 86%",
+            once: true,
+          },
         });
       }
 
@@ -302,13 +330,23 @@ const Contact = () => {
   const marqueeItems = Array(5).fill("let's collaborate");
 
   return (
-    <section id="contact" className="relative bg-secondary overflow-x-hidden">
+    /*
+     * FIX: Wrap in an outer container with overflow:hidden + isolation so the
+     * pinned hero panel never causes the page to grow a horizontal or vertical
+     * scrollbar. `isolate` creates a new stacking context so z-indices are safe.
+     */
+    <section
+      id="contact"
+      ref={sectionRef}
+      className="relative bg-secondary"
+      style={{ overflow: "hidden", isolation: "isolate" }}
+    >
 
       {/* ══ HERO PANEL — pinned, folds back on scroll ══ */}
       <div
         ref={heroRef}
-        className="relative w-full h-screen overflow-hidden"
-        style={{ perspective: "1100px" }}
+        className="relative w-full h-screen"
+        style={{ perspective: "1100px", overflow: "hidden" }}
       >
         {/* UnicornStudio animated background */}
         <div className="absolute inset-0 z-0">
@@ -372,7 +410,7 @@ const Contact = () => {
               </h2>
             </div>
 
-            {/* Tagline with image pills (ref 4) */}
+            {/* Tagline with image pills */}
             <div ref={taglineRef}
               className="flex flex-wrap items-center justify-center gap-3 mt-8 sm:mt-10"
               style={{ maxWidth: 660, margin: "2rem auto 0" }}>
@@ -627,8 +665,9 @@ const Contact = () => {
 
       <style>{`
         @keyframes scrollBar { 0%{transform:translateY(-100%)} 100%{transform:translateY(200%)} }
-        textarea { scrollbar-width: none; }
+        /* FIX: hide webkit scrollbar inside textarea */
         textarea::-webkit-scrollbar { display: none; }
+        textarea { scrollbar-width: none; -ms-overflow-style: none; }
       `}</style>
     </section>
   );
