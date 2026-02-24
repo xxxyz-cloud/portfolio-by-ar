@@ -45,6 +45,7 @@ const ContactSummary = () => {
     <section
       ref={containerRef}
       className="relative flex flex-col items-center justify-center min-h-screen gap-12 overflow-hidden bg-primary"
+      style={{ zIndex: 2, isolation: "isolate" }}
     >
       {/* Background Effects */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
