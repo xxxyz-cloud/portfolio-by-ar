@@ -1,498 +1,881 @@
-import { useRef } from "react";
-import AnimatedHeaderSection from "../components/AnimatedHeaderSection";
-import { AnimatedTextLines } from "../components/AnimatedTextLines";
+/**
+ * About.jsx — redesigned
+ * Inspired by the Alexandra Beaumont reference page techniques:
+ *  • Big editorial statement lines with scroll-expanding image pills
+ *  • Radial CSS-mask hover reveal on profile image
+ *  • Animated stat counters (GSAP ScrollTrigger)
+ *  • Clean achievement list & tag pills
+ */
+import { useRef, useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/all";
 import { achievements, stats } from "../constants";
 import { Icon } from "@iconify/react/dist/iconify.js";
 
-const About = () => {
-  const text = `Specialized in animation-rich interfaces & real-time apps
-    MERN stack architect with AI integration expertise
-    Where performance meets aesthetics`;
-    
-  // Split about text into structured sections for visual engagement
-  const aboutIntro = `Full-stack developer who bridges code and creativity—building web experiences that captivate.`;
-  
-  const aboutMain = `I don't just write code, I craft digital experiences. From pixel-perfect React UIs to bulletproof Node.js backends, every project blends technical precision with creative vision. Whether it's real-time collaboration with Socket.io, 3D graphics with Three.js, or AI integration with Google Gemini—I build production-grade solutions that make people say "How did they do that?"`;
-  
-  const specializations = [
-    { icon: "lucide:zap", text: "Real-time collaborative applications", color: "accent" },
-    { icon: "lucide:box", text: "3D web experiences", color: "accent-blue" },
-    { icon: "lucide:brain", text: "AI-powered features", color: "accent-purple" },
-    { icon: "lucide:gauge", text: "Performance optimization", color: "accent" }
-  ];
-  
-  const metrics = [
-    { number: "500+", label: "DSA Problems", icon: "lucide:code-2" },
-    { number: "10+", label: "Production Projects", icon: "lucide:rocket" },
-    { number: "60", label: "FPS Mobile", icon: "lucide:activity" }
-  ];
-  
-  const aboutClosing = `Architecting MERN stack applications while exploring AI integration and IoT ecosystems. When I'm not shipping features, I'm grinding LeetCode, experimenting with shader effects, or learning the latest in web technology.`;
+gsap.registerPlugin(ScrollTrigger);
 
-  const imgRef = useRef(null);
-  const statsRef = useRef(null);
-  const achievementRefs = useRef([]);
-  const achievementContainerRef = useRef(null);
-  const techTagRefs = useRef([]);
+/* ─── Tag Pills (skills) ────────────────────────────────── */
+const TAGS = [
+  { label: "React / Next.js",   color: "#00ff88" },
+  { label: "Node.js / Express", color: "#00d4ff" },
+  { label: "Three.js",          color: "#b77bff" },
+  { label: "GSAP",              color: "#00ff88" },
+  { label: "WebGL / Shaders",   color: "#00d4ff" },
+  { label: "MongoDB",           color: "#b77bff" },
+  { label: "Socket.io",         color: "#00ff88" },
+  { label: "TypeScript",        color: "#00d4ff" },
+  { label: "Google Gemini AI",  color: "#b77bff" },
+];
+
+/* ─── Animated stat counter ────────────────────────────── */
+const StatCounter = ({ number, label }) => {
+  const [val, setVal] = useState("0");
+  const ref = useRef(null);
+  const suffix = number.replace(/[0-9]/g, "");
+  const target  = parseInt(number, 10);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      obs.disconnect();
+      const dur = 1800, start = performance.now();
+      const tick = (now) => {
+        const t = Math.min((now - start) / dur, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        setVal(Math.round(ease * target) + suffix);
+        if (t < 1) requestAnimationFrame(tick);
+        else setVal(number);
+      };
+      requestAnimationFrame(tick);
+    }, { threshold: 0.5 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [target, suffix, number]);
+
+  return (
+    <div
+      ref={ref}
+      className="relative group flex flex-col items-start justify-end p-5 sm:p-8 md:p-10 overflow-hidden transition-colors duration-300"
+      style={{ background: "transparent" }}
+    >
+      {/* Hover fill */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ background: "rgba(0,255,136,0.04)" }}
+      />
+      <span
+        className="font-display font-bold leading-none tabular-nums mb-3"
+        style={{
+          fontSize: "clamp(3rem,7vw,6rem)",
+          color: "#00ff88",
+          textShadow: "0 0 40px rgba(0,255,136,0.2)",
+        }}
+      >
+        {val}
+      </span>
+      <span
+        className="font-mono uppercase tracking-[0.28em]"
+        style={{ fontSize: 11, color: "rgba(229,229,229,0.45)" }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+};
+
+/* ─── About Section ─────────────────────────────────────── */
+const About = () => {
+  const sectionRef   = useRef(null);
+  const dualImgRef   = useRef(null);
+  const maskLayerRef = useRef(null);
+  const currentSize  = useRef(0);
+
+  /* line + pill refs */
+  const pill1 = useRef(null);
+  const pill2 = useRef(null);
+  const pill3 = useRef(null);
+  const pill4 = useRef(null);
+
+  const line1 = useRef(null);
+  const line2 = useRef(null);
+  const line3 = useRef(null);
+  const line4 = useRef(null);
+  const line5 = useRef(null);
+
+  const tagsRef      = useRef(null);
+  const copyRef      = useRef(null);
+  const achieveRef   = useRef(null);
 
   useGSAP(() => {
-    // Section scale animation
-    const scaleTween = gsap.to("#about", {
-      scale: 0.95,
-      scrollTrigger: {
-        trigger: "#about",
-        start: "bottom 80%",
-        end: "bottom 20%",
-        scrub: true,
-      },
-      ease: "power1.inOut",
-    });
+    const ctx = gsap.context(() => {
 
-    // Image reveal animation
-    if (imgRef.current) {
-      gsap.set(imgRef.current, {
-        clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)",
-      });
-      const imgTween = gsap.to(imgRef.current, {
-        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-        duration: 2,
-        ease: "power4.out",
-        scrollTrigger: { 
-          trigger: imgRef.current,
-          start: "top 80%",
-        },
-      });
-    }
+      /* ── Statement: word reveals + pill expansions ── */
+      const lineData = [
+        { line: line1, pill: pill1 },
+        { line: line2, pill: pill2 },
+        { line: line3, pill: pill3 },
+        { line: line4, pill: null  },
+        { line: line5, pill: pill4 },
+      ];
 
-    // Stats counter animation
-    if (statsRef.current) {
-      const statsTween = gsap.from(statsRef.current.children, {
+      lineData.forEach(({ line, pill }) => {
+        const words = line.current?.querySelectorAll(".word");
+        if (words?.length) {
+          gsap.from(words, {
+            yPercent: 70,
+            opacity: 0,
+            stagger: 0.07,
+            scrollTrigger: {
+              trigger: line.current,
+              start: "top 88%",
+              end: "top 52%",
+              scrub: 1.2,
+            },
+          });
+        }
+        if (pill?.current) {
+          const pillWidth = window.innerWidth < 640 ? 0 : window.innerWidth < 1024 ? 100 : 160;
+          if (pillWidth > 0) {
+            gsap.to(pill.current, {
+              width: pillWidth,
+              scrollTrigger: {
+                trigger: line.current,
+                start: "top 90%",
+                end: "top 45%",
+                scrub: 1.2,
+              },
+            });
+          }
+        }
+      });
+
+      /* ── Copy / tag reveal ── */
+      if (copyRef.current) {
+        const revealItems = copyRef.current.querySelectorAll(".reveal-item");
+        gsap.set(revealItems, { yPercent: 20, opacity: 0 });
+        gsap.to(revealItems, {
+          yPercent: 0,
+          opacity: 1,
+          stagger: 0.12,
+          duration: 0.9,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: { trigger: copyRef.current, start: "top 85%", once: true },
+        });
+      }
+
+      if (tagsRef.current) {
+        gsap.from(tagsRef.current.querySelectorAll("span"), {
+          scale: 0.75,
+          opacity: 0,
+          stagger: 0.045,
+          duration: 0.5,
+          ease: "back.out(1.7)",
+          scrollTrigger: { trigger: tagsRef.current, start: "top 88%" },
+        });
+      }
+
+      /* ── Achievements ── */
+      if (achieveRef.current) {
+        const items = achieveRef.current.querySelectorAll(".achieve-item");
+        // Set explicit starting state so elements are invisible only until trigger fires
+        gsap.set(items, { x: -40, opacity: 0 });
+        gsap.to(items, {
+          x: 0,
+          opacity: 1,
+          stagger: 0.08,
+          duration: 0.7,
+          ease: "power2.out",
+          clearProps: "x,opacity",
+          scrollTrigger: {
+            trigger: achieveRef.current,
+            start: "top 90%",
+            once: true,
+            onEnter: () => {},
+          },
+        });
+      }
+
+      /* ── Section scale-out ── */
+      gsap.to(sectionRef.current, {
+        scale: 0.95,
         scrollTrigger: {
-          trigger: statsRef.current,
-          start: "top 80%",
+          trigger: sectionRef.current,
+          start: "bottom 80%",
+          end: "bottom 20%",
+          scrub: true,
         },
-        y: 50,
-        opacity: 0,
-        stagger: 0.2,
-        duration: 1,
-        ease: "power3.out",
+        ease: "power1.inOut",
       });
-    }
+    }, sectionRef);
 
-    // Achievements animation
-    if (achievementRefs.current.length > 0) {
-      gsap.set(achievementRefs.current, { opacity: 1, y: 0 });
-      
-      const achievementsTween = gsap.from(achievementRefs.current, {
-        scrollTrigger: {
-          trigger: achievementContainerRef.current,
-          start: "top 85%",
-        },
-        x: -50,
-        opacity: 0,
-        stagger: 0.1,
-        duration: 0.8,
-        ease: "power2.out",
-      });
-    }
-
-    // Tech tags animation
-    if (techTagRefs.current.length > 0) {
-      gsap.from(techTagRefs.current, {
-        scrollTrigger: {
-          trigger: techTagRefs.current[0],
-          start: "top 90%",
-        },
-        scale: 0,
-        opacity: 0,
-        stagger: 0.05,
-        duration: 0.5,
-        ease: "back.out(1.7)",
-      });
-    }
+    return () => ctx.revert();
   }, []);
 
-  const techCategories = {
-    "Frontend": ["React", "Next.js", "TypeScript", "Tailwind"],
-    "Backend": ["Node.js", "Express", "MongoDB", "REST APIs"],
-    "Animation": ["Three.js", "GSAP", "WebGL", "Framer Motion"],
-    "Languages": ["JavaScript", "Python", "C++"],
-    "Real-Time": ["Socket.io", "WebSockets"]
+  /* ── Radial mask hover reveal ── */
+  const LARGE = 110;
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+  const handleImgMouseMove = (e) => {
+    const rect = dualImgRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (currentSize.current > 0 && maskLayerRef.current) {
+      maskLayerRef.current.style.setProperty("--mx", `${x}px`);
+      maskLayerRef.current.style.setProperty("--my", `${y}px`);
+    }
+  };
+
+  const handleImgEnter = () => {
+    currentSize.current = LARGE;
+    gsap.to(maskLayerRef.current, { "--ms": `${LARGE}px`, duration: 0.55, ease: "back.out(1.7)" });
+  };
+
+  const handleImgLeave = () => {
+    currentSize.current = 0;
+    gsap.to(maskLayerRef.current, { "--ms": "0px", duration: 0.4 });
+  };
+
+  /* Touch reveal for mobile */
+  const handleImgTouch = (e) => {
+    const rect = dualImgRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    if (maskLayerRef.current) {
+      maskLayerRef.current.style.setProperty("--mx", `${x}px`);
+      maskLayerRef.current.style.setProperty("--my", `${y}px`);
+      currentSize.current = LARGE;
+      gsap.to(maskLayerRef.current, { "--ms": `${LARGE}px`, duration: 0.4, ease: "power2.out" });
+    }
+  };
+
+  const handleImgTouchEnd = () => {
+    currentSize.current = 0;
+    gsap.to(maskLayerRef.current, { "--ms": "0px", duration: 0.6 });
   };
 
   return (
-    <section id="about" className="min-h-screen bg-secondary rounded-b-4xl relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="grid-bg w-full h-full" />
-      </div>
+    <section
+      id="about"
+      ref={sectionRef}
+      className="relative bg-secondary rounded-b-4xl overflow-hidden"
+      style={{ transformOrigin: "top center" }}
+    >
+      {/* Subtle grid */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(0,255,136,1) 1px, transparent 1px)," +
+            "linear-gradient(90deg, rgba(0,255,136,1) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
 
-      {/* Animated Gradient Orbs */}
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-accent-purple/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/3 left-1/4 w-96 h-96 bg-accent-blue/20 rounded-full blur-3xl animate-float" />
+      {/* Ambient orbs */}
+      <div
+        className="absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(183,123,255,0.07) 0%, transparent 70%)" }}
+      />
+      <div
+        className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%)" }}
+      />
 
       <div className="relative z-10">
-        <AnimatedHeaderSection
-          subTitle={"Code with purpose, Built to scale"}
-          title={"About"}
-          text={text}
-          textColor={"text-text"}
-          withScrollTrigger={true}
-        />
 
-        {/* Main Content */}
-        <div className="flex flex-col items-center justify-between gap-16 px-10 pb-16 lg:flex-row">
-          {/* Profile Image with Enhanced Cyber Frame */}
-          <div className="relative group w-full lg:w-auto flex justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-accent via-accent-blue to-accent-purple opacity-50 blur-xl group-hover:opacity-75 transition-opacity duration-500" />
-            <div className="relative">
+        {/* ══════════════════════════════════════════════════════
+            01 — Section header
+        ════════════════════════════════════════════════════════ */}
+        <div className="flex justify-between items-start px-4 sm:px-6 md:px-10 pt-12 sm:pt-16 md:pt-20 pb-10 sm:pb-14 md:pb-16">
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-px" style={{ background: "#00ff88" }} />
+            <span
+              className="font-mono uppercase tracking-[0.38em]"
+              style={{ fontSize: 10, color: "rgba(0,255,136,0.65)" }}
+            >
+              03 · About
+            </span>
+          </div>
+          <span
+            className="font-mono"
+            style={{ fontSize: 10, color: "rgba(229,229,229,0.3)" }}
+          >
+            Est. 2023
+          </span>
+        </div>
+
+        {/* ══════════════════════════════════════════════════════
+            02 — Big editorial statement
+        ════════════════════════════════════════════════════════ */}
+        <div className="px-4 sm:px-6 md:px-10 pb-16 sm:pb-20 md:pb-24 max-w-[1400px] mx-auto">
+
+          {/* Line 1: "I build [pill] digital" */}
+          <div ref={line1} className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 leading-none mb-1 sm:mb-2 overflow-hidden">
+            <span className="word font-display font-bold uppercase text-text"
+              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}>
+              I build
+            </span>
+            {/* Image pill — hidden on small mobile to prevent overflow */}
+            <span
+              ref={pill1}
+              className="hidden sm:inline-block overflow-hidden flex-shrink-0 relative"
+              style={{
+                width: 0,
+                height: "clamp(2rem,7.5vw,7.5rem)",
+                borderRadius: 6,
+                verticalAlign: "middle",
+              }}
+            >
               <img
-                ref={imgRef}
-                src="/images/anshu-profile.jpg"
-                alt="Anshu Raj - Full Stack Developer"
-                className="relative w-full max-w-md rounded-2xl border-2 border-accent shadow-2xl"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = '<div class="w-full max-w-md h-96 rounded-2xl border-2 border-accent bg-gradient-to-br from-accent/20 to-accent-blue/20 flex items-center justify-center text-accent text-6xl font-display">AR</div>';
-                }}
+                src="/assets/projects/codexspace.jpg"
+                alt=""
+                className="h-full object-cover object-center absolute left-1/2 -translate-x-1/2"
+                style={{ width: 220 }}
               />
-              {/* Enhanced Corner Decorations */}
-              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-accent transition-all duration-300 group-hover:w-12 group-hover:h-12" />
-              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-accent-blue transition-all duration-300 group-hover:w-12 group-hover:h-12" />
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-accent-blue transition-all duration-300 group-hover:w-12 group-hover:h-12" />
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-accent transition-all duration-300 group-hover:w-12 group-hover:h-12" />
-              
-              {/* Scan Line Effect */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-y-[-100%] group-hover:translate-y-[100%]" style={{ transition: 'transform 2s linear, opacity 0.5s' }} />
-            </div>
+            </span>
+            <span
+              className="word font-display font-bold uppercase"
+              style={{
+                fontSize: "clamp(2rem,8.5vw,8.5rem)",
+                letterSpacing: "-0.02em",
+                color: "transparent",
+                WebkitTextStroke: "1.5px rgba(0,255,136,0.4)",
+              }}
+            >
+              digital
+            </span>
           </div>
 
-          {/* Enhanced About Text with Visual Elements */}
-          <div className="w-full lg:w-1/2 space-y-6">
-            {/* Decorative Header */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-px bg-gradient-to-r from-accent to-transparent" />
-              <span className="text-xs font-mono text-accent uppercase tracking-widest">About Me</span>
-              <div className="flex-1 h-px bg-gradient-to-r from-accent to-transparent" />
+          {/* Line 2: "experiences [pill] that" */}
+          <div ref={line2} className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 leading-none mb-1 sm:mb-2 overflow-hidden">
+            <span className="word font-display font-bold uppercase text-text"
+              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}>
+              experiences
+            </span>
+            <span
+              ref={pill2}
+              className="hidden sm:inline-block overflow-hidden flex-shrink-0 relative"
+              style={{
+                width: 0,
+                height: "clamp(2rem,7.5vw,7.5rem)",
+                borderRadius: 6,
+                verticalAlign: "middle",
+              }}
+            >
+              <img
+                src="/assets/projects/gamebit.jpg"
+                alt=""
+                className="h-full object-cover object-center absolute left-1/2 -translate-x-1/2"
+                style={{ width: 220 }}
+              />
+            </span>
+            <span
+              className="word font-display font-bold uppercase text-text"
+              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}
+            >
+              that
+            </span>
+          </div>
+
+          {/* Line 3: "don't [pill] just" */}
+          <div ref={line3} className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 leading-none mb-1 sm:mb-2 overflow-hidden">
+            <span
+              className="word font-display font-bold uppercase"
+              style={{
+                fontSize: "clamp(2rem,8.5vw,8.5rem)",
+                letterSpacing: "-0.02em",
+                color: "transparent",
+                WebkitTextStroke: "1.5px rgba(229,229,229,0.25)",
+              }}
+            >
+              don't
+            </span>
+            <span className="word font-display font-bold uppercase text-text"
+              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}>
+              just
+            </span>
+            <span
+              ref={pill3}
+              className="hidden sm:inline-block overflow-hidden flex-shrink-0 relative"
+              style={{
+                width: 0,
+                height: "clamp(2rem,7.5vw,7.5rem)",
+                borderRadius: 6,
+                verticalAlign: "middle",
+              }}
+            >
+              <img
+                src="/assets/projects/hyperspace.jpg"
+                alt=""
+                className="h-full object-cover object-center absolute left-1/2 -translate-x-1/2"
+                style={{ width: 220 }}
+              />
+            </span>
+          </div>
+
+          {/* Line 4: "look good —" */}
+          <div ref={line4} className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 leading-none mb-1 sm:mb-2 overflow-hidden">
+            <span className="word font-display font-bold uppercase text-text"
+              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}>
+              look
+            </span>
+            <span
+              className="word font-display font-bold uppercase"
+              style={{
+                fontSize: "clamp(2rem,8.5vw,8.5rem)",
+                letterSpacing: "-0.02em",
+                color: "transparent",
+                WebkitTextStroke: "1.5px rgba(229,229,229,0.25)",
+              }}
+            >
+              good —
+            </span>
+          </div>
+
+          {/* Line 5: "they [pill] move people." */}
+          <div ref={line5} className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 leading-none overflow-hidden">
+            <span className="word font-display font-bold uppercase text-text"
+              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}>
+              they
+            </span>
+            <span
+              ref={pill4}
+              className="hidden sm:inline-block overflow-hidden flex-shrink-0 relative"
+              style={{
+                width: 0,
+                height: "clamp(2rem,7.5vw,7.5rem)",
+                borderRadius: 6,
+                verticalAlign: "middle",
+              }}
+            >
+              <img
+                src="/assets/projects/api-hub.jpg"
+                alt=""
+                className="h-full object-cover object-center absolute left-1/2 -translate-x-1/2"
+                style={{ width: 220 }}
+              />
+            </span>
+            <span
+              className="word font-display font-bold uppercase"
+              style={{
+                fontSize: "clamp(2rem,8.5vw,8.5rem)",
+                letterSpacing: "-0.02em",
+                color: "transparent",
+                WebkitTextStroke: "1.5px rgba(229,229,229,0.25)",
+              }}
+            >
+              move
+            </span>
+            <span className="word font-display font-bold uppercase"
+              style={{
+                fontSize: "clamp(2rem,8.5vw,8.5rem)",
+                letterSpacing: "-0.02em",
+                color: "#00ff88",
+                textShadow: "0 0 60px rgba(0,255,136,0.2)",
+              }}>
+              people.
+            </span>
+          </div>
+        </div>
+
+        {/* ══════════════════════════════════════════════════════
+            03 — Profile + Copy (hover reveal)
+        ════════════════════════════════════════════════════════ */}
+        <div className="px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-12 md:gap-16 items-center max-w-[1400px] mx-auto">
+
+          {/* ── Profile image with radial mask reveal ── */}
+          <div
+            ref={dualImgRef}
+            className="relative overflow-hidden rounded-sm"
+            style={{
+              height: "clamp(280px, 55vw, 680px)",
+              cursor: "none",
+            }}
+            onMouseMove={handleImgMouseMove}
+            onMouseEnter={handleImgEnter}
+            onMouseLeave={handleImgLeave}
+            onTouchMove={handleImgTouch}
+            onTouchEnd={handleImgTouchEnd}
+          >
+            {/* Base image — anshu-masked.jpg, always visible */}
+            <img
+              src="/images/anshu-masked.jpg"
+              alt="Anshu Raj"
+              className="absolute inset-0 w-full h-full object-cover object-top"
+            />
+
+            {/* Reveal layer — anshu-profile.jpg, only visible inside the cursor circle */}
+            <div
+              ref={maskLayerRef}
+              className="absolute inset-0 w-full h-full"
+              style={{
+                "--ms": "0px",
+                "--mx": "50%",
+                "--my": "50%",
+                maskImage:
+                  "radial-gradient(circle var(--ms) at var(--mx) var(--my), white 99%, transparent 100%)",
+                WebkitMaskImage:
+                  "radial-gradient(circle var(--ms) at var(--mx) var(--my), white 99%, transparent 100%)",
+              }}
+            >
+              <img
+                src="/images/anshu-profile.jpg"
+                alt="Anshu Raj — revealed"
+                className="w-full h-full object-cover object-top"
+              />
             </div>
 
-            {/* Text Content with Enhanced Visual Structure */}
-            <div className="space-y-6">
-              {/* Intro Statement */}
-              <div className="relative p-5 rounded-xl bg-gradient-to-br from-accent/10 to-transparent border-l-4 border-accent">
-                <p className="text-xl md:text-2xl font-display font-bold text-text leading-relaxed">
-                  {aboutIntro}
-                </p>
-              </div>
+            {/* Bottom gradient + label */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(to top, rgba(10,10,10,0.85) 0%, transparent 45%)",
+              }}
+            />
+            <div
+              className="absolute bottom-6 left-6 font-mono uppercase tracking-[0.35em] hidden sm:block"
+              style={{ fontSize: 9, color: "rgba(0,255,136,0.65)" }}
+            >
+              Hover to reveal ✦
+            </div>
+            <div
+              className="absolute bottom-6 left-6 font-mono uppercase tracking-[0.35em] sm:hidden"
+              style={{ fontSize: 9, color: "rgba(0,255,136,0.65)" }}
+            >
+              Tap to reveal ✦
+            </div>
 
-              {/* Main Content */}
-              <div className="relative p-6 rounded-xl bg-primary/30 border border-border/50 backdrop-blur-sm group">
-                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl pointer-events-none" />
+            {/* Corner brackets */}
+            <svg className="absolute top-0 left-0 w-9 h-9" viewBox="0 0 36 36" fill="none">
+              <path d="M36 0 L0 0 L0 36" stroke="#00ff88" strokeWidth="1.5" strokeOpacity="0.45"/>
+            </svg>
+            <svg className="absolute top-0 right-0 w-9 h-9" viewBox="0 0 36 36" fill="none">
+              <path d="M0 0 L36 0 L36 36" stroke="#00ff88" strokeWidth="1.5" strokeOpacity="0.45"/>
+            </svg>
+            <svg className="absolute bottom-0 left-0 w-9 h-9" viewBox="0 0 36 36" fill="none">
+              <path d="M36 36 L0 36 L0 0" stroke="#00ff88" strokeWidth="1.5" strokeOpacity="0.45"/>
+            </svg>
+            <svg className="absolute bottom-0 right-0 w-9 h-9" viewBox="0 0 36 36" fill="none">
+              <path d="M0 36 L36 36 L36 0" stroke="#00ff88" strokeWidth="1.5" strokeOpacity="0.45"/>
+            </svg>
+          </div>
+
+          {/* ── Copy ── */}
+          <div ref={copyRef} className="flex flex-col gap-8">
+
+            {/* Heading */}
+            <div className="reveal-item">
+              <h2
+                className="font-display font-bold uppercase leading-[0.93]"
+                style={{
+                  fontSize: "clamp(2rem,5.5vw,5.5rem)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Designed to
+                <br />
+                <span
+                  style={{
+                    color: "transparent",
+                    WebkitTextStroke: "1.5px #00ff88",
+                  }}
+                >
+                  Disrupt
+                </span>
+                <br />
+                the Ordinary
+              </h2>
+            </div>
+
+            {/* Bio paragraphs */}
+            <div className="reveal-item space-y-4">
+              <p
+                className="font-mono leading-[1.85]"
+                style={{ fontSize: 14, color: "rgba(229,229,229,0.55)", maxWidth: 460 }}
+              >
+                I'm Anshu Raj — a full-stack developer with a compulsion for
+                interfaces that feel alive. Every transition is earned, every
+                shader intentional.
+              </p>
+              <p
+                className="font-mono leading-[1.85]"
+                style={{ fontSize: 14, color: "rgba(229,229,229,0.55)", maxWidth: 460 }}
+              >
                 
-                <div className="relative">
-                  <AnimatedTextLines 
-                    text={aboutMain} 
-                    className="text-base md:text-lg font-light tracking-wide text-text-dim leading-relaxed"
+From WebGL particle systems to real-time Socket.io collaboration, 
+I work across both creative front-end experiences and backend architecture. 
+I focus on building thoughtful, 
+well-executed solutions that balance visual design with technical reliability.
+              </p>
+            </div>
+
+            {/* Tag pills */}
+            <div ref={tagsRef} className="reveal-item flex flex-wrap gap-2">
+              {TAGS.map((tag) => (
+                <span
+                  key={tag.label}
+                  className="font-mono uppercase transition-colors duration-200"
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: "0.2em",
+                    padding: "6px 14px",
+                    border: `1px solid ${tag.color}40`,
+                    color: `${tag.color}cc`,
+                    borderRadius: 2,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = `${tag.color}15`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                  }}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div className="reveal-item flex items-center gap-4 pt-2">
+              <a
+                href="https://github.com/anshu-c8NETed"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex items-center gap-2 font-mono uppercase"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: "0.25em",
+                  color: "#00ff88",
+                  textDecoration: "none",
+                }}
+              >
+                <div
+                  className="w-8 h-px transition-all duration-300 group-hover:w-14"
+                  style={{ background: "#00ff88" }}
+                />
+                View GitHub
+              </a>
+              <a
+                href="mailto:rajanshu2123@gmail.com"
+                className="group relative flex items-center gap-2 font-mono uppercase"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: "0.25em",
+                  color: "rgba(229,229,229,0.4)",
+                  textDecoration: "none",
+                }}
+              >
+                <div
+                  className="w-8 h-px transition-all duration-300 group-hover:w-14"
+                  style={{ background: "rgba(229,229,229,0.4)" }}
+                />
+                Say Hello
+              </a>
+            </div>
+          </div>
+        </div>
+
+
+        {/* ══════════════════════════════════════════════════════
+            05 — Achievements & Hobbies
+        ════════════════════════════════════════════════════════ */}
+        <div ref={achieveRef} className="px-4 sm:px-6 md:px-10 py-16 sm:py-20 md:py-24 max-w-[1400px] mx-auto">
+
+          {/* ── Achievements ─────────────────────────────── */}
+          <div className="flex items-center gap-4 mb-12">
+            <span
+              className="font-mono uppercase tracking-[0.38em]"
+              style={{ fontSize: 10, color: "rgba(0,255,136,0.55)" }}
+            >
+              04
+            </span>
+            <div className="w-px h-4" style={{ background: "rgba(0,255,136,0.25)" }} />
+            <h3
+              className="font-display font-bold uppercase"
+              style={{ fontSize: "clamp(1.4rem,3.5vw,2.6rem)", letterSpacing: "-0.02em", color: "#e5e5e5" }}
+            >
+              Achievements &amp; Certifications
+            </h3>
+          </div>
+
+          {/* Achievement rows — clean ruled list */}
+          <div className="mb-20">
+            {achievements.map((ach, i) => {
+              const accent   = ["#00ff88","#00d4ff","#b77bff","#ffcc44","#00ff88"][i % 5];
+              const iconList = ["lucide:code-2","lucide:award","lucide:brain","lucide:zap","lucide:shield-check"];
+              return (
+                <div
+                  key={i}
+                  className="achieve-item group relative flex items-center gap-5 sm:gap-8 py-5 sm:py-6 transition-all duration-300"
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+                >
+                  {/* Hover fill strip */}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none"
+                    style={{
+                      background: `linear-gradient(to right, ${accent}08, transparent 60%)`,
+                    }}
+                  />
+
+                  {/* Left: index */}
+                  <span
+                    className="font-mono flex-shrink-0 tabular-nums w-6 text-right"
+                    style={{ fontSize: 11, color: "rgba(255,255,255,0.18)", letterSpacing: "0.1em" }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+
+                  {/* Icon dot */}
+                  <div
+                    className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                    style={{
+                      background: `${accent}12`,
+                      border: `1px solid ${accent}25`,
+                    }}
+                  >
+                    <Icon icon={iconList[i % iconList.length]} style={{ color: accent, width: 14, height: 14 }} />
+                  </div>
+
+                  {/* Text */}
+                  <p
+                    className="flex-1 font-mono leading-snug transition-colors duration-300 group-hover:text-text"
+                    style={{ fontSize: "clamp(0.75rem,1.5vw,0.88rem)", color: "rgba(229,229,229,0.55)" }}
+                  >
+                    {ach}
+                  </p>
+
+                  {/* Right: accent pip that slides in */}
+                  <div
+                    className="flex-shrink-0 w-1.5 h-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
+                    style={{ background: accent, boxShadow: `0 0 6px ${accent}` }}
                   />
                 </div>
-
-                <div className="absolute top-0 left-0 w-2 h-2 bg-accent rounded-full" />
-                <div className="absolute top-0 right-0 w-2 h-2 bg-accent-blue rounded-full" />
-                <div className="absolute bottom-0 left-0 w-2 h-2 bg-accent-purple rounded-full" />
-                <div className="absolute bottom-0 right-0 w-2 h-2 bg-accent rounded-full" />
-              </div>
-
-              {/* Current Specializations */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Icon icon="lucide:sparkles" className="w-5 h-5 text-accent" />
-                  <h4 className="text-lg font-display font-bold text-accent uppercase tracking-wider">
-                    Current Specializations
-                  </h4>
-                </div>
-                
-                <div className="grid gap-3">
-                  {specializations.map((spec, index) => (
-                    <div 
-                      key={index}
-                      className="group/spec relative flex items-center gap-4 p-4 rounded-lg bg-secondary/50 border border-border/50 hover:border-accent transition-all duration-300 overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-accent/10 to-transparent opacity-0 group-hover/spec:opacity-100 transition-opacity duration-300" />
-                      
-                      <div className={`relative flex-shrink-0 w-10 h-10 rounded-lg bg-${spec.color}/10 border border-${spec.color}/30 flex items-center justify-center group-hover/spec:scale-110 transition-transform duration-300`}>
-                        <Icon icon={spec.icon} className={`w-5 h-5 text-${spec.color}`} />
-                      </div>
-                      
-                      <p className="relative text-base font-mono text-text group-hover/spec:text-accent transition-colors duration-300">
-                        {spec.text}
-                      </p>
-
-                      <div className="absolute right-4 opacity-0 group-hover/spec:opacity-100 transition-opacity duration-300">
-                        <Icon icon="lucide:arrow-right" className="w-4 h-4 text-accent" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* By The Numbers */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Icon icon="lucide:bar-chart-3" className="w-5 h-5 text-accent-blue" />
-                  <h4 className="text-lg font-display font-bold text-accent-blue uppercase tracking-wider">
-                    By The Numbers
-                  </h4>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  {metrics.map((metric, index) => (
-                    <div 
-                      key={index}
-                      className="group/metric relative p-4 rounded-lg bg-gradient-to-br from-primary/50 to-primary/30 border border-border/50 hover:border-accent-blue transition-all duration-300 overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-accent-blue/10 to-transparent opacity-0 group-hover/metric:opacity-100 transition-opacity duration-500" />
-                      
-                      <div className="relative flex items-center gap-3">
-                        <Icon icon={metric.icon} className="w-6 h-6 text-accent-blue opacity-50 group-hover/metric:opacity-100 transition-opacity duration-300" />
-                        <div>
-                          <div className="text-2xl font-bold font-display text-accent-blue group-hover/metric:scale-110 transition-transform duration-300 inline-block">
-                            {metric.number}
-                          </div>
-                          <p className="text-xs font-mono text-text-dim uppercase tracking-wider">
-                            {metric.label}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-accent-blue/20 group-hover/metric:border-accent-blue/50 transition-colors duration-300" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Closing Statement */}
-              <div className="relative p-5 rounded-xl bg-gradient-to-br from-primary/40 to-secondary/40 border border-border/50">
-                <AnimatedTextLines 
-                  text={aboutClosing} 
-                  className="text-sm md:text-base font-light italic text-text-dim leading-relaxed"
-                />
-                
-                <div className="absolute bottom-2 right-2 opacity-20">
-                  <Icon icon="lucide:code-2" className="w-12 h-12 text-accent" />
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
-        </div>
 
-        {/* Enhanced Stats Grid */}
-        <div 
-          ref={statsRef}
-          className="grid grid-cols-2 md:grid-cols-4 gap-8 px-10 pb-16"
-        >
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className="relative p-6 rounded-xl bg-primary/50 border border-border hover:border-accent transition-all duration-300 group overflow-hidden"
+          {/* ── Divider ───────────────────────────────────── */}
+          <div
+            className="mb-16 h-px"
+            style={{ background: "linear-gradient(to right, transparent, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.08) 70%, transparent)" }}
+          />
+
+          {/* ── Hobbies ──────────────────────────────────── */}
+          <div className="flex items-center gap-4 mb-12">
+            <span
+              className="font-mono uppercase tracking-[0.38em]"
+              style={{ fontSize: 10, color: "rgba(0,212,255,0.55)" }}
             >
-              {/* Animated Background Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-accent-blue/10 to-accent-purple/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              {/* Particle Effect on Hover */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-accent rounded-full animate-ping" />
-                <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-accent-blue rounded-full animate-ping" style={{ animationDelay: "0.2s" }} />
-                <div className="absolute bottom-1/4 right-1/4 w-1 h-1 bg-accent-purple rounded-full animate-ping" style={{ animationDelay: "0.4s" }} />
-              </div>
-
-              <div className="relative">
-                <div className="text-4xl md:text-5xl font-bold neon-text font-display mb-2 group-hover:scale-110 transition-transform duration-300">
-                  {stat.number}
-                </div>
-                <div className="text-sm md:text-base font-mono text-text-dim group-hover:text-text transition-colors duration-300">
-                  {stat.label}
-                </div>
-                
-                {/* Corner Accent */}
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-accent/30 group-hover:border-accent transition-colors duration-300" />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Enhanced Achievements Section */}
-        <div ref={achievementContainerRef} className="px-10 pb-16">
-          <div className="flex items-center gap-4 mb-8">
-            <Icon icon="lucide:trophy" className="w-8 h-8 text-accent" />
-            <h3 className="text-2xl md:text-3xl font-bold text-accent font-display">
-              Achievements & Certifications
+              05
+            </span>
+            <div className="w-px h-4" style={{ background: "rgba(0,212,255,0.25)" }} />
+            <h3
+              className="font-display font-bold uppercase"
+              style={{ fontSize: "clamp(1.4rem,3.5vw,2.6rem)", letterSpacing: "-0.02em", color: "#e5e5e5" }}
+            >
+              Beyond the Code
             </h3>
-            <div className="flex-1 h-px bg-gradient-to-r from-accent to-transparent" />
           </div>
-          
-          <div className="grid md:grid-cols-2 gap-4">
-            {achievements.map((achievement, index) => (
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            {[
+              {
+                label: "Chess",
+                icon: "mdi:chess-knight",
+                desc: "Tactical thinking & pattern recognition",
+                color: "#00ff88",
+              },
+              {
+                label: "Workout",
+                icon: "lucide:dumbbell",
+                desc: "Discipline that bleeds into the craft",
+                color: "#00d4ff",
+              },
+              {
+                label: "Reading",
+                icon: "lucide:book-open",
+                desc: "Books that sharpen perspective",
+                color: "#b77bff",
+              },
+              {
+                label: "Sports",
+                icon: "lucide:activity",
+                desc: "Team play & competitive edge",
+                color: "#ffcc44",
+              },
+            ].map((hobby) => (
               <div
-                key={index}
-                ref={(el) => {
-                  if (el) achievementRefs.current[index] = el;
+                key={hobby.label}
+                className="achieve-item group relative overflow-hidden rounded-2xl p-5 sm:p-6 flex flex-col gap-4 transition-all duration-500"
+                style={{
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.06)",
                 }}
-                className="group relative flex items-start gap-4 p-5 rounded-xl bg-gradient-to-br from-primary/50 to-primary/30 border border-border hover:border-accent-blue transition-all duration-300 overflow-hidden"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = `${hobby.color}0a`;
+                  e.currentTarget.style.borderColor = `${hobby.color}30`;
+                  e.currentTarget.style.transform   = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow   = `0 24px 48px ${hobby.color}10`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background  = "rgba(255,255,255,0.02)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                  e.currentTarget.style.transform   = "translateY(0)";
+                  e.currentTarget.style.boxShadow   = "none";
+                }}
               >
-                {/* Animated Background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-accent-blue/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                {/* Icon */}
-                <div className="relative flex-shrink-0 w-10 h-10 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Icon icon="lucide:check-circle" className="w-5 h-5 text-accent" />
+                {/* Top: icon */}
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 flex-shrink-0"
+                  style={{ background: `${hobby.color}15`, border: `1px solid ${hobby.color}28` }}
+                >
+                  <Icon icon={hobby.icon} style={{ color: hobby.color, width: 18, height: 18 }} />
                 </div>
-                
-                {/* Content */}
-                <div className="relative flex-1">
-                  <p className="text-base md:text-lg font-light text-text group-hover:text-accent-blue transition-colors duration-300">
-                    {achievement}
+
+                {/* Label */}
+                <div>
+                  <p
+                    className="font-display font-bold uppercase mb-1 transition-colors duration-300"
+                    style={{ fontSize: "clamp(0.9rem,1.8vw,1.05rem)", letterSpacing: "-0.01em", color: "#e5e5e5" }}
+                  >
+                    {hobby.label}
+                  </p>
+                  <p
+                    className="font-mono leading-relaxed"
+                    style={{ fontSize: "clamp(0.68rem,1.2vw,0.75rem)", color: "rgba(229,229,229,0.38)" }}
+                  >
+                    {hobby.desc}
                   </p>
                 </div>
 
-                {/* Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                {/* Bottom accent line */}
+                <div
+                  className="absolute bottom-0 left-0 h-[1.5px] w-0 group-hover:w-full transition-all duration-600"
+                  style={{ background: `linear-gradient(to right, ${hobby.color}80, transparent)` }}
+                />
+
+                {/* Subtle corner glow */}
+                <div
+                  className="absolute top-0 right-0 w-16 h-16 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle at top right, ${hobby.color}15, transparent 70%)`,
+                  }}
+                />
               </div>
             ))}
           </div>
         </div>
 
-        {/* Enhanced Tech Arsenal Section */}
-        <div className="px-10 pb-16">
-          <div className="flex items-center gap-4 mb-8">
-            <Icon icon="lucide:layers" className="w-8 h-8 text-accent-blue" />
-            <h3 className="text-2xl md:text-3xl font-bold text-accent-blue font-display">
-              Tech Arsenal
-            </h3>
-            <div className="flex-1 h-px bg-gradient-to-r from-accent-blue to-transparent" />
-          </div>
-
-          <div className="space-y-8">
-            {Object.entries(techCategories).map(([category, technologies], categoryIndex) => (
-              <div key={category} className="group">
-                {/* Category Header */}
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-3 h-3 rounded-full bg-accent group-hover:bg-accent-blue transition-all duration-300 group-hover:shadow-lg group-hover:shadow-accent-blue/50" />
-                  <h4 className="text-xl font-display font-bold text-text group-hover:text-accent-blue transition-colors duration-300">
-                    {category}
-                  </h4>
-                  <div className="flex-1 h-px bg-gradient-to-r from-accent/30 to-transparent group-hover:from-accent-blue/50 transition-all duration-300" />
-                  <span className="text-xs font-mono text-text-dim">{technologies.length}</span>
-                </div>
-
-                {/* Technology Tags Grid */}
-                <div className="flex flex-wrap gap-4">
-                  {technologies.map((tech, techIndex) => {
-                    const globalIndex = categoryIndex * 10 + techIndex;
-                    return (
-                      <div
-                        key={tech}
-                        ref={(el) => {
-                          if (el) techTagRefs.current[globalIndex] = el;
-                        }}
-                        className="group/tag relative cursor-pointer"
-                      >
-                        {/* Main Tag Container */}
-                        <div className="relative px-6 py-3 rounded-xl bg-secondary/90 border-2 border-accent/50 overflow-hidden transition-all duration-300 hover:border-accent hover:shadow-2xl hover:shadow-accent/40 hover:scale-105 hover:-translate-y-1">
-                          {/* Animated Hover Background */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-accent/20 via-accent-blue/20 to-accent-purple/20 opacity-0 group-hover/tag:opacity-100 transition-opacity duration-500" />
-                          
-                          {/* Scan Line Effect */}
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/40 to-transparent h-full translate-y-[-100%] group-hover/tag:translate-y-[100%] transition-transform duration-700" />
-                          
-                          {/* Text - Made more visible */}
-                          <span className="relative z-10 font-mono text-base font-semibold text-accent group-hover/tag:text-white transition-colors duration-300 drop-shadow-lg whitespace-nowrap">
-                            {tech}
-                          </span>
-
-                          {/* Corner Accents */}
-                          <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-accent opacity-0 group-hover/tag:opacity-100 transition-opacity duration-300" />
-                          <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-accent-blue opacity-0 group-hover/tag:opacity-100 transition-opacity duration-300" />
-
-                          {/* Glow Effect */}
-                          <div className="absolute -inset-1 bg-accent/20 rounded-xl blur-md opacity-0 group-hover/tag:opacity-100 transition-opacity duration-300 -z-10" />
-                        </div>
-
-                        {/* Floating Particles on Hover */}
-                        <div className="absolute top-0 left-1/4 w-1.5 h-1.5 bg-accent rounded-full opacity-0 group-hover/tag:opacity-100 group-hover/tag:animate-ping" />
-                        <div className="absolute top-1/2 right-0 w-1.5 h-1.5 bg-accent-blue rounded-full opacity-0 group-hover/tag:opacity-100 group-hover/tag:animate-ping" style={{ animationDelay: "0.15s" }} />
-                        <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-accent-purple rounded-full opacity-0 group-hover/tag:opacity-100 group-hover/tag:animate-ping" style={{ animationDelay: "0.3s" }} />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Enhanced Tech Stack Visualization */}
-          <div className="mt-16 relative">
-            {/* Section Header */}
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-px bg-accent" />
-              <span className="text-sm font-mono text-accent uppercase tracking-widest">Core Technologies</span>
-              <div className="flex-1 h-px bg-gradient-to-r from-accent to-transparent" />
-            </div>
-
-            {/* Technology Cards */}
-            <div className="relative p-8 rounded-2xl bg-gradient-to-br from-primary/50 to-secondary/50 border-2 border-border/50 backdrop-blur-sm overflow-hidden">
-              {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-5">
-                <div className="grid-bg w-full h-full" />
-              </div>
-
-              {/* Animated Gradient Orb */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full blur-3xl animate-pulse" />
-              
-              <div className="relative grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-                {[
-                  { icon: "logos:react", label: "React", color: "#61DAFB" },
-                  { icon: "logos:nodejs-icon", label: "Node.js", color: "#339933" },
-                  { icon: "logos:mongodb-icon", label: "MongoDB", color: "#47A248" },
-                  { icon: "logos:threejs", label: "Three.js", color: "#000000" },
-                  { icon: "logos:socket-io", label: "Socket.io", color: "#010101" },
-                ].map((item, index) => (
-                  <div key={index} className="group relative flex flex-col items-center gap-4 cursor-pointer">
-                    {/* Glow Effect */}
-                    <div className="absolute inset-0 bg-accent/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    
-                    {/* Icon Container */}
-                    <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-secondary to-primary border-2 border-border flex items-center justify-center group-hover:border-accent group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-xl">
-                      {/* Scan Line */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/30 to-transparent opacity-0 group-hover:opacity-100 translate-y-[-100%] group-hover:translate-y-[100%] transition-all duration-1000" />
-                      
-                      <Icon icon={item.icon} className="w-12 h-12 relative z-10 group-hover:scale-110 transition-transform duration-300" />
-                      
-                      {/* Corner Accents */}
-                      <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-accent-blue opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-                    
-                    {/* Label */}
-                    <div className="relative text-center">
-                      <span className="text-sm font-mono text-text-dim group-hover:text-accent transition-colors duration-300 font-medium">
-                        {item.label}
-                      </span>
-                      {/* Underline */}
-                      <div className="h-px bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 mt-1" />
-                    </div>
-
-                    {/* Floating Particles */}
-                    <div className="absolute top-0 left-1/2 w-1 h-1 bg-accent rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping" />
-                    <div className="absolute bottom-0 right-0 w-1 h-1 bg-accent-blue rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping" style={{ animationDelay: "0.2s" }} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
+
+      {/* GSAP CSS var support */}
+      <style>{`
+        [ref="maskLayerRef"] { transition: none; }
+      `}</style>
     </section>
   );
 };
