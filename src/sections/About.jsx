@@ -1,11 +1,4 @@
-/**
- * About.jsx — redesigned
- * Inspired by the Alexandra Beaumont reference page techniques:
- *  • Big editorial statement lines with scroll-expanding image pills
- *  • Radial CSS-mask hover reveal on profile image
- *  • Animated stat counters (GSAP ScrollTrigger)
- *  • Clean achievement list & tag pills
- */
+
 import { useRef, useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -214,8 +207,8 @@ const About = () => {
   }, []);
 
   /* ── Radial mask hover reveal ── */
-  const LARGE = 110;
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const LARGE = isMobile ? 55 : 110;
 
   const handleImgMouseMove = (e) => {
     const rect = dualImgRef.current.getBoundingClientRect();
