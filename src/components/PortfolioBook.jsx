@@ -1,4 +1,3 @@
-
 import {
   Suspense, useState, useEffect, useRef, useMemo, Component,
 } from "react";
@@ -19,21 +18,21 @@ class BookErrorBoundary extends Component {
   static getDerivedStateFromError() { return { hasError: true }; }
   render() {
     if (this.state.hasError)
-      return <div className="w-full h-full flex items-center justify-center">
-        <p className="font-mono text-xs text-text-dim tracking-widest uppercase">[ 3D unavailable ]</p>
-      </div>;
+      return (
+        <div className="w-full h-full flex items-center justify-center">
+          <p className="font-mono text-xs text-text-dim tracking-widest uppercase">[ 3D unavailable ]</p>
+        </div>
+      );
     return this.props.children;
   }
 }
 
 /* ── Palette ────────────────────────────────────────────────── */
-// Muted/desaturated accent colours — less neon, more refined
 const ACCENT = "#00ff88";
 const BLUE   = "#00d4ff";
 const PURPLE = "#b77bff";
 const GOLD   = "#ffcc44";
 
-// INFO PAGE uses softer, desaturated versions of acc
 const INFO_THEMES = [
   { bg1:"#10181a", bg2:"#0c1210", acc:"#3ecf82", glow:"rgba(62,207,130,0.10)"  },
   { bg1:"#101620", bg2:"#0c1018", acc:"#38b8d8", glow:"rgba(56,184,216,0.10)"  },
@@ -180,61 +179,6 @@ function loadImg(src) {
   });
 }
 
-/* ── Section label helper ───────────────────────────────────── */
-function drawSectionLabel(ctx, text, x, y, acc) {
-  ctx.save();
-  ctx.font = "700 12px monospace";
-  ctx.fillStyle = `${acc}ee`;
-  ctx.textAlign = "left";
-  ctx.letterSpacing = "0.28em";
-  ctx.fillText(text, x, y);
-  // underline accent dot
-  ctx.fillStyle = acc;
-  ctx.beginPath(); ctx.arc(x, y + 8, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
-}
-
-/* ── Metric bar helper ──────────────────────────────────────── */
-function drawMetricBar(ctx, label, value, x, y, totalW, acc) {
-  const BAR_H   = 5;
-  const labelW  = 120;
-  const barW    = totalW - labelW - 56;
-  const pctW    = barW * (value / 100);
-
-  // Label
-  ctx.save();
-  ctx.font      = "500 13px monospace";
-  ctx.fillStyle = "rgba(255,255,255,0.75)";
-  ctx.textAlign = "left";
-  ctx.fillText(label, x, y + BAR_H);
-
-  // Track
-  ctx.fillStyle = "rgba(255,255,255,0.06)";
-  roundRect(ctx, x + labelW, y - 1, barW, BAR_H, 3); ctx.fill();
-
-  // Fill (gradient)
-  const grad = ctx.createLinearGradient(x + labelW, 0, x + labelW + pctW, 0);
-  grad.addColorStop(0, `${acc}cc`);
-  grad.addColorStop(1, acc);
-  ctx.fillStyle = grad;
-  roundRect(ctx, x + labelW, y - 1, Math.max(pctW, 4), BAR_H, 3); ctx.fill();
-
-  // Glow dot at end
-  ctx.fillStyle = acc;
-  ctx.beginPath(); ctx.arc(x + labelW + pctW, y + 1.5, 3.5, 0, Math.PI * 2); ctx.fill();
-  ctx.shadowColor = acc; ctx.shadowBlur = 8;
-  ctx.beginPath(); ctx.arc(x + labelW + pctW, y + 1.5, 3.5, 0, Math.PI * 2); ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // Percentage text
-  ctx.font      = "600 11px monospace";
-  ctx.fillStyle = `${acc}88`;
-  ctx.textAlign = "right";
-  ctx.fillText(`${value}%`, x + totalW, y + BAR_H);
-
-  ctx.restore();
-}
-
 /* ── IMAGE page (left side) ─────────────────────────────────── */
 async function makeImagePage(project, index) {
   const cv = document.createElement("canvas");
@@ -252,11 +196,9 @@ async function makeImagePage(project, index) {
       if (iA > cA) { sw=img.height*cA; sx=(img.width-sw)/2; }
       else         { sh=img.width/cA;  sy=(img.height-sh)/2; }
       ctx.drawImage(img, sx,sy,sw,sh, 0,0,W,H);
-
       const vig = ctx.createRadialGradient(W/2,H/2,H*0.22,W/2,H/2,H*0.82);
       vig.addColorStop(0,"rgba(0,0,0,0.1)"); vig.addColorStop(1,"rgba(0,0,0,0.68)");
       ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
-
       const fade = ctx.createLinearGradient(0,H*0.62,0,H);
       fade.addColorStop(0,"transparent"); fade.addColorStop(1,"rgba(0,0,0,0.90)");
       ctx.fillStyle=fade; ctx.fillRect(0,H*0.62,W,H*0.38);
@@ -269,198 +211,129 @@ async function makeImagePage(project, index) {
     grid(ctx, acc);
   }
 
-  // Top accent bar
   const tb = ctx.createLinearGradient(0,0,W,0);
   tb.addColorStop(0,acc); tb.addColorStop(0.6,`${acc}50`); tb.addColorStop(1,"transparent");
   ctx.fillStyle=tb; ctx.fillRect(0,0,W,4);
-
-  // Top-left corner bracket
   ctx.strokeStyle=`${acc}dd`; ctx.lineWidth=2;
   ctx.beginPath(); ctx.moveTo(36,62); ctx.lineTo(36,36); ctx.lineTo(62,36); ctx.stroke();
 
-  // Caption area
-  const CAP_PAD = 44;
-  const CAP_Y   = H - 148;
-
+  const CAP_PAD = 44, CAP_Y = H - 148;
   ctx.font = "700 11px monospace"; ctx.textAlign="left"; ctx.fillStyle=`${acc}bb`;
   ctx.fillText(`0${index+1}`, CAP_PAD, CAP_Y);
-
   ctx.strokeStyle=`${acc}30`; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(CAP_PAD, CAP_Y+14); ctx.lineTo(W-CAP_PAD, CAP_Y+14); ctx.stroke();
-
   ctx.save();
   ctx.font="700 38px 'Arial Black',sans-serif"; ctx.textAlign="left";
   const nameMaxW = W - CAP_PAD*2;
   let nameStr = (project?.name??'').toUpperCase();
-  while(ctx.measureText(nameStr).width > nameMaxW && nameStr.length > 2)
-    nameStr = nameStr.slice(0,-1);
+  while(ctx.measureText(nameStr).width > nameMaxW && nameStr.length > 2) nameStr = nameStr.slice(0,-1);
   if((project?.name??'').toUpperCase() !== nameStr) nameStr += '…';
   ctx.shadowColor=acc; ctx.shadowBlur=12;
   ctx.fillStyle="#ffffffee";
   ctx.fillText(nameStr, CAP_PAD, CAP_Y+56);
   ctx.shadowBlur=0; ctx.restore();
-
   const tags = (project?.frameworks??[]).slice(0,3).map(f=>f.name).join("  ·  ");
   ctx.font="400 13px monospace"; ctx.fillStyle=`${acc}80`; ctx.textAlign="left";
   ctx.fillText(tags, CAP_PAD, CAP_Y+84);
-
   scanlines(ctx);
   const tex = new CanvasTexture(cv);
   tex.colorSpace = SRGBColorSpace;
   return tex;
 }
 
-/* ── INFO page (right side) — editorial redesign ───────────── */
+/* ── INFO page (right side) ─────────────────────────────────── */
 function makeInfoPage(project, index) {
   const cv = document.createElement("canvas");
   cv.width = W; cv.height = H;
   const ctx = cv.getContext("2d");
-  const { bg1, bg2, acc, glow } = INFO_THEMES[index % INFO_THEMES.length];
+  const { bg1, bg2, acc } = INFO_THEMES[index % INFO_THEMES.length];
   const meta = PROJECT_META[index] || PROJECT_META[0];
 
-  // ── Background — mid-dark, not pitch black ─────────────────
   const bg = ctx.createLinearGradient(0, 0, W, H);
   bg.addColorStop(0, bg1); bg.addColorStop(1, bg2);
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
-  // Diagonal accent band — very subtle tint only
   ctx.save();
-  ctx.globalAlpha = 0.04;
-  ctx.fillStyle = acc;
-  ctx.beginPath();
-  ctx.moveTo(W * 0.4, 0); ctx.lineTo(W, 0);
-  ctx.lineTo(W, H * 0.55); ctx.lineTo(W * 0.4, 0);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.restore();
+  ctx.globalAlpha = 0.04; ctx.fillStyle = acc;
+  ctx.beginPath(); ctx.moveTo(W * 0.4, 0); ctx.lineTo(W, 0); ctx.lineTo(W, H * 0.55); ctx.lineTo(W * 0.4, 0); ctx.fill();
+  ctx.globalAlpha = 1; ctx.restore();
 
-  // Ambient glow — softer, smaller radius
   const glowG = ctx.createRadialGradient(W * 0.82, H * 0.18, 0, W * 0.82, H * 0.18, 220);
   glowG.addColorStop(0, `${acc}18`); glowG.addColorStop(1, "transparent");
   ctx.fillStyle = glowG; ctx.fillRect(0, 0, W, H);
-
-  // Subtle grid
   grid(ctx, acc);
 
-  // ── Ghost index number watermark ────────────────────────────
   ctx.save();
-  ctx.font = "900 340px 'Arial Black', sans-serif";
-  ctx.textAlign = "right";
-  ctx.globalAlpha = 0.03;
-  ctx.fillStyle = acc;
+  ctx.font = "900 340px 'Arial Black', sans-serif"; ctx.textAlign = "right";
+  ctx.globalAlpha = 0.03; ctx.fillStyle = acc;
   ctx.fillText(`0${index + 1}`, W - 20, H * 0.62);
-  ctx.globalAlpha = 1;
-  ctx.restore();
+  ctx.globalAlpha = 1; ctx.restore();
 
-  // Left spine strip — muted, not glowing
   const lb = ctx.createLinearGradient(0, 0, 0, H);
   lb.addColorStop(0, "transparent"); lb.addColorStop(0.2, `${acc}70`); lb.addColorStop(0.7, `${acc}18`); lb.addColorStop(1, "transparent");
   ctx.fillStyle = lb; ctx.fillRect(0, 0, 2, H);
 
-  // Top accent bar — thinner, softer
   const tb = ctx.createLinearGradient(0, 0, W, 0);
   tb.addColorStop(0, `${acc}cc`); tb.addColorStop(0.4, `${acc}30`); tb.addColorStop(1, "transparent");
   ctx.fillStyle = tb; ctx.fillRect(0, 0, W, 3);
 
   if (!project) { scanlines(ctx); const t = new CanvasTexture(cv); t.colorSpace = SRGBColorSpace; return t; }
 
-  const P  = 56;
-  const CW = W - P * 2;
-
-  // ── SECTION 1: TOP META ROW  y=44 ───────────────────────────
+  const P = 56, CW = W - P * 2;
   let y = 44;
 
-  // Index tag — no glow, just tinted accent
   ctx.save();
-  ctx.font = "700 13px monospace"; ctx.textAlign = "left";
-  ctx.fillStyle = `${acc}cc`;
+  ctx.font = "700 13px monospace"; ctx.textAlign = "left"; ctx.fillStyle = `${acc}cc`;
   ctx.fillText(`${String(index + 1).padStart(2, "0")}`, P, y + 14);
-
-  // Divider dot
-  ctx.fillStyle = `${acc}40`;
-  ctx.beginPath(); ctx.arc(P + 28, y + 8, 2, 0, Math.PI * 2); ctx.fill();
-
-  // Category text — dimmer
-  ctx.font = "500 13px monospace";
-  ctx.fillStyle = "rgba(200,200,210,0.38)";
-  ctx.fillText(meta.category.toUpperCase(), P + 40, y + 14);
-  ctx.restore();
-
-  // Year — top right, quiet
+  ctx.fillStyle = `${acc}40`; ctx.beginPath(); ctx.arc(P + 28, y + 8, 2, 0, Math.PI * 2); ctx.fill();
+  ctx.font = "500 13px monospace"; ctx.fillStyle = "rgba(200,200,210,0.38)";
+  ctx.fillText(meta.category.toUpperCase(), P + 40, y + 14); ctx.restore();
   ctx.save();
-  ctx.font = "600 13px monospace"; ctx.textAlign = "right";
-  ctx.fillStyle = `${acc}50`;
-  ctx.fillText(meta.year, W - P, y + 14);
-  ctx.restore();
+  ctx.font = "600 13px monospace"; ctx.textAlign = "right"; ctx.fillStyle = `${acc}50`;
+  ctx.fillText(meta.year, W - P, y + 14); ctx.restore();
 
-  // ── Thin full-width rule — muted ───────────────────────────
   y = 74;
   const rg = ctx.createLinearGradient(P, 0, W - P, 0);
   rg.addColorStop(0, `${acc}55`); rg.addColorStop(0.5, `${acc}20`); rg.addColorStop(1, "transparent");
   ctx.strokeStyle = rg; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(P, y); ctx.lineTo(W - P, y); ctx.stroke();
-  // Small dot, no glow
-  ctx.fillStyle = `${acc}55`;
-  ctx.beginPath(); ctx.arc(P, y, 2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = `${acc}55`; ctx.beginPath(); ctx.arc(P, y, 2, 0, Math.PI * 2); ctx.fill();
 
-  // ── SECTION 2: PROJECT NAME ─────────────────────────────────
   y = 92;
   const NAME_FS = 66, NAME_LH = 72;
   ctx.save();
   ctx.font = `900 ${NAME_FS}px 'Arial Black', sans-serif`; ctx.textAlign = "left";
   const nameLines = wrapText(ctx, project.name.toUpperCase(), CW, 2);
   nameLines.forEach((l, li) => {
-    // Flat off-white — no gradient, no glow, just clean type
     ctx.fillStyle = li === 0 ? "rgba(225,225,232,0.92)" : "rgba(200,200,210,0.65)";
     ctx.fillText(l, P, y + NAME_FS + li * NAME_LH);
-  });
-  ctx.restore();
-
+  }); ctx.restore();
   const nameBtm = y + NAME_FS + (nameLines.length - 1) * NAME_LH;
-
-  // Accent underline — barely there
   y = nameBtm + 10;
   ctx.save();
   const ul = ctx.createLinearGradient(P, 0, P + CW * 0.38, 0);
   ul.addColorStop(0, `${acc}55`); ul.addColorStop(1, "transparent");
-  ctx.fillStyle = ul; ctx.fillRect(P, y, CW * 0.38, 1);
-  ctx.restore();
+  ctx.fillStyle = ul; ctx.fillRect(P, y, CW * 0.38, 1); ctx.restore();
 
-  // ── SECTION 3: DESCRIPTION ─────────────────────────────────
   y += 28;
-
-  // Left accent border strip — very muted
   const descG = ctx.createLinearGradient(0, y, 0, y + 160);
   descG.addColorStop(0, `${acc}55`); descG.addColorStop(1, `${acc}00`);
   ctx.fillStyle = descG; ctx.fillRect(P, y, 2, 160);
-
   const descText = meta.description || project.description || "";
   ctx.save();
-  ctx.font = "400 22px Arial, sans-serif";
-  ctx.fillStyle = "rgba(170,170,182,0.60)";
-  ctx.textAlign = "left";
+  ctx.font = "400 22px Arial, sans-serif"; ctx.fillStyle = "rgba(170,170,182,0.60)"; ctx.textAlign = "left";
   const descLines = wrapText(ctx, descText, CW - 22, 4);
   const DESC_LH = 34;
-  descLines.forEach((l, li) => {
-    ctx.fillText(l, P + 18, y + 26 + li * DESC_LH);
-  });
-  ctx.restore();
-
+  descLines.forEach((l, li) => { ctx.fillText(l, P + 18, y + 26 + li * DESC_LH); }); ctx.restore();
   const descBtm = y + 26 + (descLines.length - 1) * DESC_LH;
 
-  // ── SECTION 4: TECH STACK ───────────────────────────────────
   y = descBtm + 44;
-
-  // Section label
   ctx.save();
-  ctx.font = "700 11px monospace"; ctx.textAlign = "left";
-  ctx.fillStyle = `${acc}66`; ctx.letterSpacing = "0.2em";
+  ctx.font = "700 11px monospace"; ctx.textAlign = "left"; ctx.fillStyle = `${acc}66`;
   ctx.fillText("BUILT WITH", P, y);
-  // Small line right of label
-  ctx.strokeStyle = `${acc}20`; ctx.lineWidth = 1;
   const lwTxt = ctx.measureText("BUILT WITH").width;
-  ctx.beginPath(); ctx.moveTo(P + lwTxt + 12, y - 4); ctx.lineTo(W - P, y - 4); ctx.stroke();
-  ctx.restore();
+  ctx.strokeStyle = `${acc}20`; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(P + lwTxt + 12, y - 4); ctx.lineTo(W - P, y - 4); ctx.stroke(); ctx.restore();
 
   y += 14;
   const PILL_H = 38, PILL_GAP = 10, PILL_ROW_GAP = 10;
@@ -469,113 +342,65 @@ function makeInfoPage(project, index) {
   for (const f of (project.frameworks ?? []).slice(0, 9)) {
     const label = f.name.toUpperCase();
     const tw = ctx.measureText(label).width + 28;
-    if (px + tw > W - P) {
-      row++; if (row >= 2) break;
-      px = P; py += PILL_H + PILL_ROW_GAP;
-    }
-    // Background — very faint
+    if (px + tw > W - P) { row++; if (row >= 2) break; px = P; py += PILL_H + PILL_ROW_GAP; }
     const pg = ctx.createLinearGradient(px, py, px, py + PILL_H);
     pg.addColorStop(0, `${acc}10`); pg.addColorStop(1, `${acc}05`);
     ctx.fillStyle = pg; roundRect(ctx, px, py, tw, PILL_H, 6); ctx.fill();
-    // Border — muted
-    ctx.strokeStyle = `${acc}30`; ctx.lineWidth = 1;
-    roundRect(ctx, px, py, tw, PILL_H, 6); ctx.stroke();
-    // Text — no glow
-    ctx.fillStyle = `${acc}cc`;
-    ctx.fillText(label, px + 14, py + 24);
+    ctx.strokeStyle = `${acc}30`; ctx.lineWidth = 1; roundRect(ctx, px, py, tw, PILL_H, 6); ctx.stroke();
+    ctx.fillStyle = `${acc}cc`; ctx.fillText(label, px + 14, py + 24);
     px += tw + PILL_GAP;
   }
-
   const pillBtm = py + PILL_H;
 
-  // ── SECTION 5: KEY HIGHLIGHTS ───────────────────────────────
   y = pillBtm + 44;
-
   ctx.save();
-  ctx.font = "700 11px monospace"; ctx.textAlign = "left";
-  ctx.fillStyle = `${acc}66`;
+  ctx.font = "700 11px monospace"; ctx.textAlign = "left"; ctx.fillStyle = `${acc}66`;
   ctx.fillText("HIGHLIGHTS", P, y);
   const hlwTxt = ctx.measureText("HIGHLIGHTS").width;
   ctx.strokeStyle = `${acc}20`; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(P + hlwTxt + 12, y - 4); ctx.lineTo(W - P, y - 4); ctx.stroke();
-  ctx.restore();
+  ctx.beginPath(); ctx.moveTo(P + hlwTxt + 12, y - 4); ctx.lineTo(W - P, y - 4); ctx.stroke(); ctx.restore();
 
   y += 18;
   const HL_ROW_H = 52;
   for (const [i, hl] of (meta.highlights ?? []).entries()) {
     const hy = y + i * HL_ROW_H;
-
-    // Numbered badge — quiet
     ctx.save();
     ctx.font = "700 11px monospace"; ctx.textAlign = "center";
     const numBadgeW = 30, numBadgeH = 22;
-    ctx.fillStyle = `${acc}0c`;
-    roundRect(ctx, P, hy, numBadgeW, numBadgeH, 4); ctx.fill();
-    ctx.strokeStyle = `${acc}30`; ctx.lineWidth = 1;
-    roundRect(ctx, P, hy, numBadgeW, numBadgeH, 4); ctx.stroke();
-    ctx.fillStyle = `${acc}bb`;
-    ctx.fillText(`${String(i + 1).padStart(2, "0")}`, P + numBadgeW / 2, hy + 15);
-    ctx.restore();
-
-    // Dashed connector
+    ctx.fillStyle = `${acc}0c`; roundRect(ctx, P, hy, numBadgeW, numBadgeH, 4); ctx.fill();
+    ctx.strokeStyle = `${acc}30`; ctx.lineWidth = 1; roundRect(ctx, P, hy, numBadgeW, numBadgeH, 4); ctx.stroke();
+    ctx.fillStyle = `${acc}bb`; ctx.fillText(`${String(i + 1).padStart(2, "0")}`, P + numBadgeW / 2, hy + 15); ctx.restore();
     ctx.save();
     ctx.strokeStyle = `${acc}25`; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
     ctx.beginPath(); ctx.moveTo(P + 36, hy + 11); ctx.lineTo(P + 58, hy + 11); ctx.stroke();
     ctx.setLineDash([]); ctx.restore();
-
-    // Highlight text
     ctx.save();
-    ctx.font = "400 20px Arial, sans-serif";
-    ctx.fillStyle = "rgba(172,172,184,0.62)";
-    ctx.textAlign = "left";
-    ctx.fillText(hl, P + 64, hy + 17);
-    ctx.restore();
-
-    // Thin separator (not after last)
+    ctx.font = "400 20px Arial, sans-serif"; ctx.fillStyle = "rgba(172,172,184,0.62)"; ctx.textAlign = "left";
+    ctx.fillText(hl, P + 64, hy + 17); ctx.restore();
     if (i < (meta.highlights?.length ?? 0) - 1) {
       ctx.strokeStyle = `rgba(255,255,255,0.05)`; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(P, hy + HL_ROW_H - 6); ctx.lineTo(W - P, hy + HL_ROW_H - 6); ctx.stroke();
     }
   }
 
-  // ── BOTTOM STATUS BAR ────────────────────────────────────────
   const BTMY = H - 68;
-
-  // Full-width gradient rule — very subtle
   const br = ctx.createLinearGradient(0, 0, W, 0);
-  br.addColorStop(0, "transparent"); br.addColorStop(0.25, `${acc}20`);
-  br.addColorStop(0.75, `${acc}20`); br.addColorStop(1, "transparent");
+  br.addColorStop(0, "transparent"); br.addColorStop(0.25, `${acc}20`); br.addColorStop(0.75, `${acc}20`); br.addColorStop(1, "transparent");
   ctx.strokeStyle = br; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(P, BTMY); ctx.lineTo(W - P, BTMY); ctx.stroke();
-
-  // Status pill — muted
   ctx.save();
   ctx.font = "600 12px monospace"; ctx.textAlign = "left";
   const stTxt = `● ${meta.status}`;
   const stW = ctx.measureText(stTxt).width + 24;
   ctx.fillStyle = `${acc}0a`; roundRect(ctx, P, BTMY + 14, stW, 30, 15); ctx.fill();
   ctx.strokeStyle = `${acc}30`; ctx.lineWidth = 1; roundRect(ctx, P, BTMY + 14, stW, 30, 15); ctx.stroke();
-  ctx.fillStyle = `${acc}aa`;
-  ctx.fillText(stTxt, P + 12, BTMY + 33);
-  ctx.restore();
-
-  // CTA right side — dim
+  ctx.fillStyle = `${acc}aa`; ctx.fillText(stTxt, P + 12, BTMY + 33); ctx.restore();
   ctx.save();
-  ctx.font = "700 13px monospace"; ctx.textAlign = "right";
-  ctx.fillStyle = "rgba(170,170,180,0.28)";
-  ctx.fillText("VIEW LIVE PROJECT  ↗", W - P, BTMY + 33);
-  ctx.restore();
-
-  // Corner brackets — quieter
+  ctx.font = "700 13px monospace"; ctx.textAlign = "right"; ctx.fillStyle = "rgba(170,170,180,0.28)";
+  ctx.fillText("VIEW LIVE PROJECT  ↗", W - P, BTMY + 33); ctx.restore();
   ctx.strokeStyle = `${acc}40`; ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(W - P, H - P - 18); ctx.lineTo(W - P, H - P); ctx.lineTo(W - P - 18, H - P);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(P + 18, P); ctx.lineTo(P, P); ctx.lineTo(P, P + 18);
-  ctx.stroke();
-
-  // Bottom accent bar — softened
+  ctx.beginPath(); ctx.moveTo(W - P, H - P - 18); ctx.lineTo(W - P, H - P); ctx.lineTo(W - P - 18, H - P); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(P + 18, P); ctx.lineTo(P, P); ctx.lineTo(P, P + 18); ctx.stroke();
   const BTM = ctx.createLinearGradient(0, 0, W, 0);
   BTM.addColorStop(0, "transparent"); BTM.addColorStop(0.5, `${acc}88`); BTM.addColorStop(1, "transparent");
   ctx.fillStyle = BTM; ctx.fillRect(0, H - 3, W, 3);
@@ -592,7 +417,6 @@ async function makeCoverTexture(isFront) {
   const cv  = document.createElement("canvas");
   cv.width = W; cv.height = H;
   const ctx = cv.getContext("2d");
-
   const img = await loadImg(src);
   if (img) {
     const iA = img.width / img.height, cA = W / H;
@@ -605,7 +429,6 @@ async function makeCoverTexture(isFront) {
     ctx.font = "300 14px monospace"; ctx.fillStyle = `${ACCENT}40`; ctx.textAlign = "center";
     ctx.fillText(isFront ? "FRONT COVER" : "BACK COVER", W/2, H/2);
   }
-
   scanlines(ctx);
   const tex = new CanvasTexture(cv);
   tex.colorSpace = SRGBColorSpace;
@@ -621,7 +444,6 @@ async function buildBookPages() {
     makeCoverTexture(false),
   ]);
   const infoTextures = projects.map((p,i) => makeInfoPage(p,i));
-
   const pages = [];
   pages.push({ frontTex: frontCover, backTex: imgTextures[0], isCover: true });
   for (let k = 1; k < N; k++) pages.push({ frontTex: infoTextures[k-1], backTex: imgTextures[k] });
@@ -666,7 +488,6 @@ const Page=({number,frontTex,backTex,page,opened,bookClosed,setPage,isCover})=>{
     const m=new SkinnedMesh(geo,mats);
     m.castShadow=m.receiveShadow=true; m.frustumCulled=false;
     m.add(sk.bones[0]); m.bind(sk); return m;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   },[frontTex,backTex]);
 
   useFrame((_,delta)=>{
@@ -733,7 +554,7 @@ const AutoFloat=()=>{
   return null;
 };
 
-/* ── Camera responder — reacts to container resize live ─────── */
+/* ── Camera responder ───────────────────────────────────────── */
 const CameraResponder=({containerRef})=>{
   const {camera}=useThree();
   useEffect(()=>{
@@ -749,7 +570,7 @@ const CameraResponder=({containerRef})=>{
   return null;
 };
 
-/* ── Enhanced Nav + project card ────────────────────────────── */
+/* ── Book Nav ───────────────────────────────────────────────── */
 const BookNav=({page,setPage,total})=>{
   const N=projects.length;
   const idx = (page>=1&&page<=N) ? page-1 : null;
@@ -800,84 +621,49 @@ const BookNav=({page,setPage,total})=>{
         </button>
       </div>
 
-      {/* Rich project card — maxHeight generous so it never clips on mobile */}
+      {/* Rich project card */}
       <div
         className="w-full max-w-4xl transition-all duration-500 overflow-hidden"
         style={{ maxHeight: proj ? "700px" : "0px", opacity: proj ? 1 : 0 }}
       >
         {proj && meta && (
-          <div
-            className="rounded-2xl overflow-hidden"
+          <div className="rounded-2xl overflow-hidden"
             style={{
               background: "rgba(10,10,10,0.85)",
               border: `1px solid ${theme.acc}20`,
               boxShadow: `0 0 40px ${theme.acc}0a, 0 20px 50px rgba(0,0,0,0.5)`,
             }}
           >
-            {/* Top stripe */}
             <div className="h-px w-full" style={{
               background: `linear-gradient(to right, transparent, ${theme.acc}60, transparent)`
             }} />
-
             <div className="flex gap-0">
-              {/* Left accent bar */}
               <div className="w-1 flex-shrink-0 self-stretch" style={{
                 background: `linear-gradient(to bottom, ${theme.acc}, ${theme.acc}30)`
               }} />
-
               <div className="flex-1 p-4 sm:p-6 flex flex-col gap-4">
-                {/* Top meta row */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-mono text-[10px] sm:text-[11px] tracking-widest uppercase"
-                    style={{ color: `${theme.acc}cc` }}>
-                    {meta.category}
-                  </span>
+                    style={{ color: `${theme.acc}cc` }}>{meta.category}</span>
                   <span className="font-mono text-[11px]" style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
                   <span className="font-mono text-[10px] sm:text-[11px] tracking-widest uppercase"
-                    style={{ color: "rgba(255,255,255,0.4)" }}>
-                    {meta.year}
-                  </span>
+                    style={{ color: "rgba(255,255,255,0.4)" }}>{meta.year}</span>
                 </div>
-
-                {/* Project name */}
-                <p className="font-display font-bold text-white text-lg sm:text-2xl leading-tight">
-                  {proj.name}
-                </p>
-
-                {/* Description — no fixed maxWidth, let it wrap naturally */}
-                <p className="text-xs sm:text-sm leading-relaxed"
-                  style={{ color: "rgba(255,255,255,0.55)" }}>
-                  {meta.description}
-                </p>
-
-                {/* Bottom row: tech tags + CTA — wraps gracefully on small screens */}
+                <p className="font-display font-bold text-white text-lg sm:text-2xl leading-tight">{proj.name}</p>
+                <p className="text-xs sm:text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>{meta.description}</p>
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <div className="flex flex-wrap gap-1.5">
                     {proj.frameworks.slice(0, 3).map(f => (
                       <span key={f.id}
                         className="font-mono text-[9px] sm:text-[10px] tracking-widest uppercase px-2 py-1 rounded"
-                        style={{
-                          color: theme.acc,
-                          border: `1px solid ${theme.acc}45`,
-                          background: `${theme.acc}12`,
-                        }}>
+                        style={{ color: theme.acc, border: `1px solid ${theme.acc}45`, background: `${theme.acc}12` }}>
                         {f.name}
                       </span>
                     ))}
                   </div>
-
-                  <a
-                    href={proj.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <a href={proj.href} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-mono text-[10px] sm:text-[11px] tracking-widest uppercase transition-all duration-300 hover:scale-105 hover:brightness-125 whitespace-nowrap flex-shrink-0"
-                    style={{
-                      color: theme.acc,
-                      border: `1px solid ${theme.acc}65`,
-                      background: `${theme.acc}16`,
-                      boxShadow: `0 0 20px ${theme.acc}18`,
-                    }}
-                  >
+                    style={{ color: theme.acc, border: `1px solid ${theme.acc}65`, background: `${theme.acc}16`, boxShadow: `0 0 20px ${theme.acc}18` }}>
                     Live Preview
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                       <path d="M2 8L8 2M8 2H4M8 2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -890,13 +676,13 @@ const BookNav=({page,setPage,total})=>{
         )}
       </div>
 
-      {/* Interaction hints — touch-aware */}
+      {/* Interaction hints */}
       <div className="flex items-center gap-5 mt-2 opacity-30">
         <span className="font-mono text-[9px] sm:text-[10px] tracking-[0.28rem] uppercase text-text-dim flex items-center gap-1.5">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M7 11l5-5 5 5M7 17l5-5 5 5"/>
           </svg>
-          {isTouch ? "Swipe to rotate" : "Drag to rotate"}
+          {isTouch ? "2-finger drag to rotate" : "Drag to rotate"}
         </span>
         <span className="w-px h-3 bg-text-dim/40"/>
         <span className="font-mono text-[9px] sm:text-[10px] tracking-[0.28rem] uppercase text-text-dim flex items-center gap-1.5">
@@ -916,17 +702,22 @@ const PortfolioBook=()=>{
   const [bookPages,setBookPages] = useState(null);
   const [mounted,setMounted]     = useState(false);
   const [cursor,setCursor]       = useState("grab");
-  const wrapperRef  = useRef(null);
+  const [isDragging,setIsDragging] = useState(false);
+  const wrapperRef    = useRef(null);
   const canvasWrapRef = useRef(null);
-  const prevPage    = useRef(page);
-  const isMobile    = typeof window!=="undefined" && window.innerWidth<768;
+  const prevPage      = useRef(page);
 
+  // Derive isMobile once and stable — no re-derive on every render
+  const isMobile = useRef(typeof window!=="undefined" && window.innerWidth<768).current;
+
+  /* ── Intersection-triggered mount ── */
   useEffect(()=>{
     const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting)setMounted(true);},{threshold:0.05});
     if(wrapperRef.current) obs.observe(wrapperRef.current);
     return ()=>obs.disconnect();
   },[]);
 
+  /* ── Build pages once mounted ── */
   useEffect(()=>{
     if(!mounted) return;
     let cancelled=false;
@@ -934,6 +725,7 @@ const PortfolioBook=()=>{
     return ()=>{cancelled=true;};
   },[mounted]);
 
+  /* ── Page-flip sound ── */
   useEffect(()=>{
     if(page!==prevPage.current){
       prevPage.current=page;
@@ -941,30 +733,119 @@ const PortfolioBook=()=>{
     }
   },[page]);
 
+  /* ── FIX 1: Prevent pinch/gesture zoom on the canvas container ──
+      This is the root cause of "book size increases on scroll":
+      browser pinch-zoom or iOS Safari gesture events changing the
+      viewport scale, which the OrbitControls then interprets as dolly.
+  ── */
+  useEffect(()=>{
+    const el = canvasWrapRef.current;
+    if(!el) return;
+
+    // Block multi-touch gestures (iOS Safari gesturestart = pinch)
+    const blockGesture = (e) => { e.preventDefault(); };
+
+    // Block two-finger touch start to prevent pinch-zoom being
+    // forwarded to the 3D canvas as a dolly/zoom gesture
+    const blockMultiTouch = (e) => {
+      if(e.touches && e.touches.length > 1) {
+        e.preventDefault(); // stop browser pinch-zoom + OrbitControls dolly
+      }
+    };
+
+    el.addEventListener('gesturestart',  blockGesture,     { passive: false });
+    el.addEventListener('gesturechange', blockGesture,     { passive: false });
+    el.addEventListener('gestureend',    blockGesture,     { passive: false });
+    el.addEventListener('touchstart',    blockMultiTouch,  { passive: false });
+
+    return () => {
+      el.removeEventListener('gesturestart',  blockGesture);
+      el.removeEventListener('gesturechange', blockGesture);
+      el.removeEventListener('gestureend',    blockGesture);
+      el.removeEventListener('touchstart',    blockMultiTouch);
+    };
+  },[]);
+
+  /* ── FIX 2: Set touch-action on the R3F canvas AFTER mount ──
+      R3F sets touch-action:none by default on the <canvas> element,
+      which traps ALL touch events and prevents page scrolling.
+      Overriding to `pan-y` lets vertical swipes scroll the page
+      while still allowing OrbitControls to receive pointer events.
+      On desktop nothing changes (wheel is unaffected by touch-action).
+  ── */
+  useEffect(()=>{
+    if(!bookPages || !canvasWrapRef.current) return;
+    // Small timeout so the Canvas has mounted its DOM element
+    const t = setTimeout(()=>{
+      const canvas = canvasWrapRef.current?.querySelector('canvas');
+      if(canvas){
+        // pan-y = vertical touch → browser scroll | horizontal touch → JS/OrbitControls
+        canvas.style.touchAction = 'pan-y';
+      }
+    }, 150);
+    return ()=>clearTimeout(t);
+  },[bookPages]);
+
+  /* ── FIX 3: Prevent wheel events from triggering OrbitControls
+      zoom even when enableZoom=false (belt-and-suspenders).
+      We stop the synthetic wheel event reaching the canvas so that
+      Lenis/native scroll always works when hovering the 3D view.
+  ── */
+  useEffect(()=>{
+    const el = canvasWrapRef.current;
+    if(!el) return;
+    const onWheel = (e) => {
+      // Don't call preventDefault — we WANT the page to scroll.
+      // stopPropagation stops Lenis intercepting it but browser scroll still works.
+      // The Canvas event system won't see it, so OrbitControls can't zoom.
+      e.stopPropagation();
+    };
+    el.addEventListener('wheel', onWheel, { passive: true });
+    return () => el.removeEventListener('wheel', onWheel);
+  },[]);
+
   const total = bookPages ? bookPages.length-1 : 0;
+
+  /* ── Canvas height: use `svh` (small-viewport-height) units ──
+      `100vh` on mobile changes when the browser chrome hides/shows
+      (address bar sliding away) causing the canvas to grow/shrink,
+      which looks like "the book is zooming". `svh` = the smallest
+      possible viewport height (chrome fully visible) so it's stable.
+  ── */
+  const canvasHeight = isMobile
+    ? "clamp(460px, 75svh, 680px)"  // stable on mobile — won't jump when scrolling
+    : "clamp(680px, 88svh, 1060px)";
 
   return(
     <div ref={wrapperRef} className="relative w-full flex flex-col items-center py-8 sm:py-14 px-2 sm:px-4">
 
-      {/* 3-D canvas — clamp lower on mobile so it doesn't eat the whole viewport */}
+      {/* 3-D canvas */}
       <div
         ref={canvasWrapRef}
         className="relative w-full"
-        style={{height: isMobile ? "clamp(500px,85vh,740px)" : "clamp(700px,90vh,1100px)", cursor}}
-        onPointerDown={()=>setCursor("grabbing")}
-        onPointerUp={()=>setCursor("grab")}
-        onPointerLeave={()=>setCursor("grab")}
+        style={{ height: canvasHeight, cursor }}
+        onPointerDown={()=>{ setCursor("grabbing"); setIsDragging(true); }}
+        onPointerUp={()=>{ setCursor("grab"); setIsDragging(false); }}
+        onPointerLeave={()=>{ setCursor("grab"); setIsDragging(false); }}
       >
         <div className="absolute inset-0 pointer-events-none"
           style={{background:"radial-gradient(ellipse 55% 45% at 50% 55%,rgba(0,255,136,0.05) 0%,transparent 70%)"}}/>
 
-        {mounted&&bookPages?(
+        {mounted && bookPages ? (
           <BookErrorBoundary>
             <Canvas
               shadows={!isMobile}
-              camera={{position:[-0.5,0.5,4.5],fov: isMobile ? 62 : 52}}
-              gl={{antialias:!isMobile, alpha:true, powerPreference: isMobile?"low-power":"high-performance"}}
-              style={{background:"transparent"}}
+              camera={{position:[-0.5,0.5,4.5], fov: isMobile ? 62 : 52}}
+              gl={{
+                antialias: !isMobile,
+                alpha: true,
+                powerPreference: isMobile ? "low-power" : "high-performance",
+              }}
+              style={{
+                background: "transparent",
+                // NOTE: We override touch-action via the useEffect above
+                // because setting it here gets overwritten by R3F internals.
+              }}
             >
               <color attach="background" args={["#0a0a0a"]}/>
               <fog attach="fog" args={["#0a0a0a",14,24]}/>
@@ -981,8 +862,7 @@ const PortfolioBook=()=>{
                 <group position={[0,0,0]}>
                   <Book page={page} setPage={setPage} bookPages={bookPages}/>
                 </group>
-                {/* Fewer sparkles on mobile — meaningful GPU saving */}
-                <Sparkles count={isMobile?16:50} scale={[6,5,4]} size={1.2} speed={0.18} opacity={0.28} color="#00ff88"/>
+                <Sparkles count={isMobile?12:50} scale={[6,5,4]} size={1.2} speed={0.18} opacity={0.28} color="#00ff88"/>
                 {!isMobile&&<Sparkles count={24} scale={[5,4,3]} size={0.8} speed={0.1} opacity={0.18} color="#00d4ff" position={[0.5,0,0]}/>}
                 <mesh position-y={-1.55} rotation-x={-Math.PI/2} receiveShadow>
                   <planeGeometry args={[100,100]}/>
@@ -991,15 +871,30 @@ const PortfolioBook=()=>{
                 <Environment preset="warehouse" background={false}/>
               </Suspense>
               <AutoFloat/>
-              {/* CameraResponder updates Z live on resize / rotation */}
               <CameraResponder containerRef={canvasWrapRef}/>
-              <OrbitControls enableZoom={false} enablePan={false}
-                rotateSpeed={isMobile?0.4:0.55}
-                minPolarAngle={Math.PI/4} maxPolarAngle={Math.PI*0.72}
-                dampingFactor={0.06} enableDamping/>
+              <OrbitControls
+                enableZoom={false}
+                enablePan={false}
+                /* Hard distance limits — even if dolly somehow fires,
+                   the camera cannot visually zoom the scene */
+                minDistance={1.8}
+                maxDistance={5.5}
+                rotateSpeed={isMobile ? 0.4 : 0.55}
+                minPolarAngle={Math.PI/4}
+                maxPolarAngle={Math.PI*0.72}
+                dampingFactor={0.06}
+                enableDamping
+                /* On mobile, require TWO fingers to orbit so that
+                   single-finger vertical swipes scroll the page instead.
+                   touch-action:pan-y (set in useEffect) cooperates with this. */
+                touches={isMobile
+                  ? { ONE: undefined, TWO: 1 /* TOUCH.ROTATE */ }
+                  : undefined
+                }
+              />
             </Canvas>
           </BookErrorBoundary>
-        ):(
+        ) : (
           <div className="w-full h-full flex items-center justify-center">
             <div className="flex flex-col items-center gap-5 opacity-40">
               <div className="relative w-20 h-24 border border-accent/40 rounded"
@@ -1010,7 +905,7 @@ const PortfolioBook=()=>{
                 </div>
               </div>
               <p className="font-mono text-xs tracking-[0.4rem] uppercase text-text-dim">
-                {mounted?"Loading project images…":"Initializing 3D Book…"}
+                {mounted ? "Loading project images…" : "Initializing 3D Book…"}
               </p>
             </div>
           </div>
@@ -1018,7 +913,7 @@ const PortfolioBook=()=>{
       </div>
 
       {/* Nav */}
-      {bookPages&&(
+      {bookPages && (
         <BookNav page={page} setPage={setPage} total={total}/>
       )}
     </div>
