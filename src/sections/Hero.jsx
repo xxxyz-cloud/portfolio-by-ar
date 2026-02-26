@@ -31,7 +31,6 @@ const CodeEntrance = ({ onComplete }) => {
     const tl = gsap.timeline({ defaults: { ease: "power2.inOut" } });
     const texts = textRefs.current;
 
-    // Sequence each greeting
     texts.forEach((el, i) => {
       const isFirst = i === 0;
       const isLast = i === texts.length - 1;
@@ -45,10 +44,8 @@ const CodeEntrance = ({ onComplete }) => {
       if (!isLast) tl.set(el, { opacity: 0 }, `+=${hold}`);
     });
 
-    // Animate progress bar
     tl.to(progressRef.current, { scaleX: 1, duration: tl.duration() * 0.9, ease: "none" }, 0);
 
-    // Slide out
     tl.to(containerRef.current, { y: "-100%", duration: 0.9, ease: "expo.inOut" }, "+=0.3")
       .to(roundRef.current, { height: 0, ease: "expo.inOut" }, "-=0.6")
       .call(() => onComplete?.(), [], "-=0.1");
@@ -61,7 +58,6 @@ const CodeEntrance = ({ onComplete }) => {
       ref={containerRef}
       className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-primary"
     >
-      {/* Progress bar */}
       <div className="absolute top-0 left-0 right-0 h-[2px] overflow-hidden bg-border/20">
         <div
           ref={progressRef}
@@ -70,31 +66,28 @@ const CodeEntrance = ({ onComplete }) => {
         />
       </div>
 
-      {/* Greeting text stack */}
-      <div className="relative flex items-center justify-center">
+      <div className="relative flex items-center justify-center w-full px-6">
         {codeGreetings.map((g, i) => (
           <div
             key={i}
             ref={(el) => (textRefs.current[i] = el)}
-            className="absolute flex items-center gap-4 opacity-0"
+            className="absolute flex items-center gap-3 opacity-0 max-w-[90vw]"
             style={{ transform: "translateY(20px)" }}
           >
-            <span className="font-mono text-accent text-sm tracking-widest opacity-60">
+            <span className="font-mono text-accent text-sm tracking-widest opacity-60 flex-shrink-0">
               {g.dot}
             </span>
-            <span className="font-mono text-text text-lg sm:text-2xl md:text-3xl tracking-wide whitespace-nowrap">
+            <span className="font-mono text-text text-base sm:text-2xl md:text-3xl tracking-wide break-all sm:whitespace-nowrap">
               {g.text}
             </span>
           </div>
         ))}
       </div>
 
-      {/* Bottom curve wipe */}
       <div className="absolute top-full left-0 right-0 h-[20vh] overflow-hidden" ref={roundRef}>
         <div className="absolute w-[150%] h-[200%] bg-primary rounded-[50%] left-1/2 top-1/2 -translate-x-1/2 -translate-y-full" />
       </div>
 
-      {/* Corner accents */}
       <div className="absolute top-6 left-6 w-8 h-8 border-t border-l border-accent/30" />
       <div className="absolute top-6 right-6 w-8 h-8 border-t border-r border-accent-blue/30" />
       <div className="absolute bottom-6 left-6 w-8 h-8 border-b border-l border-accent-purple/30" />
@@ -206,60 +199,7 @@ const NumberCounter = ({ end, suffix = "", duration = 2 }) => {
   return <span ref={countRef}>{count}{suffix}</span>;
 };
 
-/* ─────────────────────────────────────────────
-   TECH STACK CAROUSEL
-───────────────────────────────────────────── */
-const TechStackCarousel = () => {
-  const techStack = [
-    { name: "React", icon: "logos:react" },
-    { name: "Next.js", icon: "logos:nextjs-icon" },
-    { name: "TypeScript", icon: "logos:typescript-icon" },
-    { name: "Node.js", icon: "logos:nodejs-icon" },
-    { name: "MongoDB", icon: "logos:mongodb-icon" },
-    { name: "Three.js", icon: "logos:threejs" },
-    { name: "GSAP", icon: "logos:greensock-icon" },
-    { name: "Tailwind", icon: "logos:tailwindcss-icon" },
-    { name: "Socket.io", icon: "logos:socket-io" },
-    { name: "Python", icon: "logos:python" },
-  ];
-  const carouselRef = useRef(null);
 
-  useEffect(() => {
-    if (!carouselRef.current) return;
-    const carousel = carouselRef.current;
-    const items = [...carousel.children];
-    if (!items[0]) return;
-    const totalWidth = items.reduce((acc, el) => acc + el.offsetWidth + 24, 0);
-    gsap.to(carousel, {
-      x: -totalWidth / 2,
-      duration: 28,
-      ease: "none",
-      repeat: -1,
-      modifiers: { x: gsap.utils.unitize((x) => parseFloat(x) % (totalWidth / 2)) },
-    });
-  }, []);
-
-  const duplicatedTech = [...techStack, ...techStack];
-
-  return (
-    <div className="relative w-full overflow-hidden py-5 border-y border-border/20 bg-secondary/20 backdrop-blur-sm">
-      <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-primary to-transparent z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-primary to-transparent z-10" />
-      <div ref={carouselRef} className="flex gap-6 items-center">
-        {duplicatedTech.map((tech, index) => (
-          <div key={`${tech.name}-${index}`} className="group flex flex-col items-center gap-2 flex-shrink-0">
-            <div className="relative w-11 h-11 md:w-13 md:h-13">
-              <div className="absolute inset-0 rounded-xl bg-primary/60 border border-border/60 group-hover:border-accent group-hover:scale-110 transition-all duration-300" />
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent/20 to-accent-blue/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <Icon icon={tech.icon} className="absolute inset-0 m-auto w-5 h-5 md:w-7 md:h-7 group-hover:rotate-12 transition-transform duration-300" />
-            </div>
-            <span className="text-[10px] font-mono text-text-dim group-hover:text-accent transition-colors duration-300 whitespace-nowrap">{tech.name}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 /* ─────────────────────────────────────────────
    THREE.JS SCENE
@@ -370,7 +310,6 @@ const StatCard = ({ number, suffix, label, icon, delay = 0 }) => {
         </div>
         <div className="text-xs font-mono text-text-dim uppercase tracking-wider">{label}</div>
       </div>
-      {/* Hover scan line */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/5 to-transparent animate-[scan_2s_ease-in-out_infinite]" />
       </div>
@@ -386,16 +325,9 @@ const Hero = () => {
   const canvasRef = useRef(null);
   const mainContentRef = useRef(null);
   const [entranceDone, setEntranceDone] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
-  // Entrance complete → animate main content in
+
   const handleEntranceComplete = useCallback(() => {
     setEntranceDone(true);
     const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
@@ -407,12 +339,11 @@ const Hero = () => {
       .from(".hero-cta", { scale: 0.85, opacity: 0, duration: 0.6, stagger: 0.12 }, "-=0.3")
       .from(".hero-stat", { y: 50, opacity: 0, duration: 0.7, stagger: 0.08 }, "-=0.3")
       .from(".hero-right", { x: 80, opacity: 0, duration: 1.2, ease: "power2.out" }, 0.4)
-      .from(".tech-carousel", { y: 40, opacity: 0, duration: 0.8 }, "-=0.4");
+      ;
   }, []);
 
   return (
     <section ref={heroRef} id="home" className="relative flex flex-col min-h-screen overflow-hidden bg-primary">
-      {/* Code entrance overlay */}
       {!entranceDone && <CodeEntrance onComplete={handleEntranceComplete} />}
 
       {/* Ambient decorations */}
@@ -432,69 +363,182 @@ const Hero = () => {
         <WaterEffect />
       </div>
 
-      {/* Main content — invisible until entrance done */}
+      {/* Main content */}
       <div ref={mainContentRef} className="relative z-10 flex flex-col flex-1" style={{ visibility: "hidden" }}>
         <div className="flex flex-col md:flex-row flex-1 w-full">
 
-          {/* LEFT: Name + Info */}
+          {/* ════════════════════════════════════
+              LEFT SIDE — improved
+          ════════════════════════════════════ */}
           <div className="relative flex flex-col justify-center w-full md:w-1/2 px-6 sm:px-10 md:px-14 lg:px-20 pt-20 md:pt-0 pb-8 md:pb-0 min-h-[70vh] md:min-h-screen">
 
-            <div className="hero-badge mb-6 md:mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/30 backdrop-blur-sm">
-                <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                <span className="text-xs font-mono text-accent uppercase tracking-wider">Available for Work</span>
+            {/* Vertical timeline rule — desktop only */}
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-center gap-3 pl-5">
+              <div className="w-px h-24 bg-gradient-to-b from-transparent via-accent/35 to-transparent" />
+              <span
+                className="font-mono text-[9px] tracking-[0.35em] text-text-dim uppercase"
+                style={{ writingMode: "vertical-rl" }}
+              >
+                Portfolio · 2025
+              </span>
+              <div className="w-px h-24 bg-gradient-to-b from-transparent via-accent/35 to-transparent" />
+            </div>
+
+            {/* ── Badge ── */}
+            <div className="hero-badge mb-7 md:mb-9">
+              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-accent/10 border border-accent/25 backdrop-blur-sm relative overflow-hidden group w-fit">
+                {/* shimmer sweep */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
+                {/* dual pulse dots */}
+                <span className="relative flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                  <span className="w-1 h-1 rounded-full bg-accent/40 animate-pulse" style={{ animationDelay: "0.4s" }} />
+                </span>
+                <span className="relative text-xs font-mono text-accent uppercase tracking-widest">
+                  Available for Work
+                </span>
+                <span className="relative text-[10px] font-mono text-text-dim hidden sm:inline">
+                  — Open to projects
+                </span>
               </div>
             </div>
 
+            {/* ── Name ── */}
             <div className="mb-6 md:mb-8">
+              {/* Section index tag */}
+              <div className="flex items-center gap-3 mb-3">
+                <span className="font-mono text-[10px] text-text-dim tracking-widest">01</span>
+                <div className="h-px w-8 bg-accent/40" />
+                <span className="font-mono text-[10px] text-accent/60 tracking-widest uppercase">Creative Dev</span>
+              </div>
+
               <div className="overflow-hidden">
                 <h1 className="hero-name-line font-display font-bold text-6xl sm:text-7xl md:text-7xl lg:text-8xl xl:text-9xl leading-none text-text tracking-tight">
                   ANSHU
                 </h1>
               </div>
-              <div className="overflow-hidden">
-                <h1 className="hero-name-line font-display font-bold text-6xl sm:text-7xl md:text-7xl lg:text-8xl xl:text-9xl leading-none tracking-tight"
-                  style={{ background: "linear-gradient(90deg, #00ff88, #00d4ff, #b77bff)", backgroundSize: "200% 100%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "gradient 4s ease infinite" }}>
+
+              {/* RAJ with ghost outline shadow for depth */}
+              <div className="overflow-hidden relative">
+                <h1
+                  className="hero-name-line font-display font-bold text-6xl sm:text-7xl md:text-7xl lg:text-8xl xl:text-9xl leading-none tracking-tight"
+                  style={{
+                    background: "linear-gradient(90deg, #00ff88, #00d4ff, #b77bff)",
+                    backgroundSize: "200% 100%",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    animation: "gradient 4s ease infinite",
+                  }}
+                >
+                  RAJ
+                </h1>
+                <h1
+                  aria-hidden
+                  className="absolute inset-0 font-display font-bold text-6xl sm:text-7xl md:text-7xl lg:text-8xl xl:text-9xl leading-none tracking-tight select-none pointer-events-none"
+                  style={{
+                    WebkitTextStroke: "1px rgba(0,255,136,0.10)",
+                    WebkitTextFillColor: "transparent",
+                    transform: "translate(4px, 4px)",
+                  }}
+                >
                   RAJ
                 </h1>
               </div>
-              <div className="mt-4 w-32 h-px bg-gradient-to-r from-accent to-transparent" />
+
+              {/* Animated underline trio */}
+              <div className="mt-5 flex items-center gap-3">
+                <div className="h-px w-32 bg-gradient-to-r from-accent via-accent-blue to-transparent" />
+                <div className="w-1.5 h-1.5 rounded-full bg-accent-blue/50" />
+                <div className="h-px w-10 bg-accent-purple/30" />
+              </div>
             </div>
 
+            {/* ── Subtitle ── */}
             <div className="hero-subtitle mb-5 md:mb-6">
-              <h2 className="font-display text-base sm:text-xl md:text-xl lg:text-2xl text-text-dim">
-                Full-Stack Developer <span className="text-accent">×</span> Creative Technologist
-              </h2>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h2 className="font-display text-base sm:text-xl lg:text-2xl text-text-dim">
+                  Full-Stack Developer
+                </h2>
+                <span className="font-mono text-accent border border-accent/30 bg-accent/5 rounded px-1.5 text-sm">
+                  ×
+                </span>
+                <h2 className="font-display text-base sm:text-xl lg:text-2xl text-text-dim">
+                  Creative Technologist
+                </h2>
+              </div>
             </div>
 
+            {/* ── Description with left border ── */}
             <div className="hero-description mb-8 md:mb-10 max-w-lg">
-              <p className="text-sm sm:text-base lg:text-lg text-text font-light leading-relaxed">
-                Crafting{" "}<span className="text-accent font-medium neon-text">pixel-perfect</span>{" "}
-                experiences at the intersection of{" "}<span className="text-accent-blue font-medium neon-text-blue">engineering</span>{" "}
-                and{" "}<span className="text-accent-purple font-medium">artistry</span>
-              </p>
+              <div className="flex gap-4">
+                <div className="w-px flex-shrink-0 rounded-full bg-gradient-to-b from-accent/70 via-accent-blue/40 to-transparent" />
+                <p className="text-sm sm:text-base lg:text-lg text-text font-light leading-relaxed">
+                  Crafting{" "}
+                  <span className="text-accent font-medium neon-text">pixel-perfect</span>{" "}
+                  experiences at the intersection of{" "}
+                  <span className="text-accent-blue font-medium neon-text-blue">engineering</span>{" "}
+                  and{" "}
+                  <span className="text-accent-purple font-medium">artistry</span>
+                </p>
+              </div>
             </div>
 
+            {/* ── CTAs ── */}
             <div className="flex flex-col sm:flex-row gap-4 mb-10 md:mb-12">
               <div className="hero-cta">
                 <MagneticButton href="#work" variant="primary">
-                  View Projects <Icon icon="lucide:arrow-right" className="group-hover:translate-x-1 transition-transform duration-300" />
+                  View Projects{" "}
+                  <Icon icon="lucide:arrow-right" className="group-hover:translate-x-1 transition-transform duration-300" />
                 </MagneticButton>
               </div>
               <div className="hero-cta">
                 <MagneticButton href="#contact" variant="secondary">
-                  Get In Touch <Icon icon="lucide:sparkles" className="group-hover:rotate-12 transition-transform duration-300" />
+                  Get In Touch{" "}
+                  <Icon icon="lucide:sparkles" className="group-hover:rotate-12 transition-transform duration-300" />
                 </MagneticButton>
               </div>
             </div>
 
+            {/* ── Stats ── */}
             <div className="grid grid-cols-2 gap-3 max-w-lg">
-              <div className="hero-stat"><StatCard number="500" suffix="+" label="Problems Solved" icon="lucide:code-2" delay={0} /></div>
-              <div className="hero-stat"><StatCard number="20" suffix="+" label="Live Projects" icon="lucide:rocket" delay={0.1} /></div>
+              <div className="hero-stat">
+                <StatCard number="500" suffix="+" label="Problems Solved" icon="lucide:code-2" delay={0} />
+              </div>
+              <div className="hero-stat">
+                <StatCard number="20" suffix="+" label="Live Projects" icon="lucide:rocket" delay={0.1} />
+              </div>
+            </div>
+
+            {/* ── Social strip ── */}
+            <div className="hero-stat mt-5 flex items-center gap-4">
+              <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest whitespace-nowrap">
+                Find me
+              </span>
+              <div className="h-px w-8 bg-border/30 flex-shrink-0" />
+              {[
+                { icon: "simple-icons:github",   href: "https://github.com",   label: "GitHub" },
+                { icon: "simple-icons:linkedin",  href: "https://linkedin.com", label: "LinkedIn" },
+                { icon: "simple-icons:x",         href: "https://x.com",        label: "X / Twitter" },
+              ].map(({ icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="group w-8 h-8 rounded-lg border border-border/40 bg-secondary/30 flex items-center justify-center hover:border-accent/60 hover:bg-accent/10 transition-all duration-300"
+                >
+                  <Icon
+                    icon={icon}
+                    className="w-3.5 h-3.5 text-text-dim group-hover:text-accent transition-colors duration-300"
+                  />
+                </a>
+              ))}
             </div>
           </div>
+          {/* ════ END LEFT ════ */}
 
-          {/* RIGHT: 3D Helmet Canvas */}
+          {/* RIGHT: 3D Helmet — UNTOUCHED */}
           <div className="hero-right relative hidden md:flex items-center justify-center w-full md:w-1/2 min-h-screen">
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-[420px] h-[420px] rounded-full border border-accent/10 animate-spin" style={{ animationDuration: "25s" }} />
@@ -507,8 +551,7 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* Tech carousel */}
-        <div className="tech-carousel relative z-10"><TechStackCarousel /></div>
+
       </div>
 
       {/* Scroll indicator */}
