@@ -31,7 +31,6 @@ const Navbar = () => {
   const isAnimating   = useRef(false);
   const verticalTextRef = useRef(null);
   const availRef      = useRef(null);
-  const scanRef       = useRef(null);
 
   const [isOpen,      setIsOpen]      = useState(false);
   const [showBurger,  setShowBurger]  = useState(true);
@@ -155,7 +154,9 @@ const Navbar = () => {
           border: 1px solid rgba(0,255,136,0.18);
           background: rgba(10,10,10,0.7);
           backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
           transition: clip-path 0.42s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+          -webkit-tap-highlight-color: transparent;
         }
         .nb-burger:hover {
           border-color: rgba(0,255,136,0.6);
@@ -179,13 +180,15 @@ const Navbar = () => {
         /* ── Overlay ── */
         .nb-overlay {
           position: fixed; inset: 0; z-index: 200;
-          display: flex; cursor: none;
+          display: flex;
+        }
+        @media (min-width: 768px) {
+          .nb-overlay { cursor: none; }
         }
 
         /* ── Grid pattern for right panel ── */
         .nb-grid-pattern {
-          position: absolute;
-          inset: 0;
+          position: absolute; inset: 0;
           background-image:
             linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
             linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
@@ -199,29 +202,28 @@ const Navbar = () => {
           background: #080808;
           display: flex; flex-direction: column;
           padding: clamp(24px,4vw,56px);
-          position: relative;
-          overflow: hidden;
+          position: relative; overflow: hidden;
           border-right: 1px solid rgba(0,255,136,0.08);
         }
-        /* Scanline effect on left panel */
+        /* On mobile: left panel fills the whole screen */
+        @media (max-width: 767px) {
+          .nb-left {
+            width: 100%;
+            border-right: none;
+            padding: 24px 22px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+        }
         .nb-left::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            to bottom,
-            transparent 50%,
-            rgba(0,255,136,0.015) 50%
-          );
+          content: ""; position: absolute; inset: 0;
+          background: linear-gradient(to bottom, transparent 50%, rgba(0,255,136,0.015) 50%);
           background-size: 100% 4px;
-          pointer-events: none;
-          z-index: 0;
+          pointer-events: none; z-index: 0;
         }
         .nb-left::after {
-          content: "";
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
-          height: 40%;
+          content: ""; position: absolute;
+          bottom: 0; left: 0; right: 0; height: 40%;
           background: linear-gradient(to top, rgba(0,255,136,0.05), transparent);
           pointer-events: none;
         }
@@ -232,16 +234,16 @@ const Navbar = () => {
           background: #0d0d0d;
           display: flex; flex-direction: column;
           padding: clamp(24px,4vw,56px);
-          position: relative;
-          overflow: hidden;
+          position: relative; overflow: hidden;
         }
-        /* Subtle right glow */
+        /* Hide right panel on mobile — left panel alone fills the screen */
+        @media (max-width: 767px) {
+          .nb-right        { display: none; }
+          .nb-divider-line { display: none; }
+        }
         .nb-right::after {
-          content: "";
-          position: absolute;
-          top: 0; right: 0;
-          width: 60%;
-          height: 50%;
+          content: ""; position: absolute;
+          top: 0; right: 0; width: 60%; height: 50%;
           background: radial-gradient(ellipse at top right, rgba(0,212,255,0.04), transparent 70%);
           pointer-events: none;
         }
@@ -250,142 +252,120 @@ const Navbar = () => {
         .nb-topbar {
           display: flex; justify-content: space-between; align-items: center;
           padding-bottom: clamp(14px,2vw,24px);
-          margin-bottom: 0;
           position: relative; z-index: 1;
         }
         .nb-topbar-label {
-          font-family: monospace;
-          font-size: 10px;
-          letter-spacing: 0.36em;
-          text-transform: uppercase;
+          font-family: monospace; font-size: 10px;
+          letter-spacing: 0.36em; text-transform: uppercase;
         }
 
         /* ── Nav links ── */
         .nb-links { display: flex; flex-direction: column; margin: auto 0; position: relative; z-index: 1; }
+        @media (max-width: 767px) {
+          /* Don't push to centre — let it sit naturally in the flow */
+          .nb-links { margin: 12px 0; }
+        }
         .nb-link-wrap { overflow: hidden; line-height: 1; }
         .nb-link-inner { transform: translateY(105%); opacity: 0; }
         .nb-link-row {
           display: flex; align-items: baseline; gap: clamp(8px,1vw,16px);
-          text-decoration: none; cursor: none;
+          text-decoration: none;
+          padding: 4px 0;
+          -webkit-tap-highlight-color: transparent;
         }
+        @media (min-width: 768px) { .nb-link-row { cursor: none; } }
+
         .nb-link-num {
-          font-family: monospace;
-          font-size: clamp(9px,0.85vw,11px);
-          letter-spacing: 0.24em;
-          color: rgba(0,255,136,0.2);
-          min-width: 2.5ch;
-          transition: color 0.2s ease;
+          font-family: monospace; font-size: clamp(9px,0.85vw,11px);
+          letter-spacing: 0.24em; color: rgba(0,255,136,0.2);
+          min-width: 2.5ch; transition: color 0.2s ease;
         }
         .nb-link-label {
           font-family: 'Bebas Neue', sans-serif;
           font-size: clamp(3rem,8vw,8rem);
-          font-weight: 400;
-          letter-spacing: 0.02em;
-          line-height: 0.9;
-          color: rgba(229,229,229,0.75);
-          display: block;
-          transition:
-            color 0.22s ease,
-            opacity 0.22s ease,
-            text-shadow 0.22s ease;
+          font-weight: 400; letter-spacing: 0.02em; line-height: 0.9;
+          color: rgba(229,229,229,0.75); display: block;
+          transition: color 0.22s ease, opacity 0.22s ease, text-shadow 0.22s ease;
+        }
+        /* Shrink link text so all 5 links fit on small phones */
+        @media (max-width: 767px) {
+          .nb-link-label { font-size: clamp(2.6rem, 12.5vw, 3.6rem); }
         }
         .nb-link-arrow {
           font-size: clamp(0.9rem,1.6vw,1.6rem);
-          color: #00ff88;
-          opacity: 0;
+          color: #00ff88; opacity: 0;
           transform: translateX(-8px);
           transition: opacity 0.2s ease, transform 0.2s ease;
         }
-
-        /* Hover states */
-        .nb-link-wrap:hover .nb-link-label {
-          color: #00ff88;
-          text-shadow:
-            0 0 30px rgba(0,255,136,0.6),
-            0 0 80px rgba(0,255,136,0.25),
-            0 0 120px rgba(0,255,136,0.1);
-          opacity: 1 !important;
+        /* Always show arrows on mobile (no hover) */
+        @media (max-width: 767px) {
+          .nb-link-arrow { opacity: 0.35; transform: translateX(0); }
         }
-        .nb-link-wrap:hover .nb-link-num   { color: #00ff88; }
-        .nb-link-wrap:hover .nb-link-arrow { opacity: 1; transform: translateX(0); }
 
-        /* Dim siblings */
-        .nb-links:has(.nb-link-wrap:hover) .nb-link-wrap:not(:hover) .nb-link-label {
-          opacity: 0.12;
-          color: rgba(229,229,229,0.5);
-          text-shadow: none;
-        }
-        .nb-links:has(.nb-link-wrap:hover) .nb-link-wrap:not(:hover) .nb-link-num {
-          color: rgba(0,255,136,0.08);
+        /* Hover states — desktop only */
+        @media (min-width: 768px) {
+          .nb-link-wrap:hover .nb-link-label {
+            color: #00ff88;
+            text-shadow: 0 0 30px rgba(0,255,136,0.6), 0 0 80px rgba(0,255,136,0.25), 0 0 120px rgba(0,255,136,0.1);
+            opacity: 1 !important;
+          }
+          .nb-link-wrap:hover .nb-link-num   { color: #00ff88; }
+          .nb-link-wrap:hover .nb-link-arrow { opacity: 1; transform: translateX(0); }
+          .nb-links:has(.nb-link-wrap:hover) .nb-link-wrap:not(:hover) .nb-link-label {
+            opacity: 0.12; color: rgba(229,229,229,0.5); text-shadow: none;
+          }
+          .nb-links:has(.nb-link-wrap:hover) .nb-link-wrap:not(:hover) .nb-link-num {
+            color: rgba(0,255,136,0.08);
+          }
         }
 
         /* ── Right tags ── */
         .nb-tag-row {
           display: flex; align-items: center; gap: 10px;
           margin-bottom: clamp(10px,1.5vh,18px);
-          opacity: 0;
-          position: relative; z-index: 1;
+          opacity: 0; position: relative; z-index: 1;
         }
-        .nb-tag-num {
-          font-family: monospace; font-size: 9px;
-          letter-spacing: 0.3em; color: rgba(0,255,136,0.2);
-        }
-        .nb-tag-label {
-          font-family: monospace; font-size: clamp(10px,1vw,12px);
-          letter-spacing: 0.2em; text-transform: uppercase;
-          color: rgba(229,229,229,0.25);
-        }
-        .nb-tag-dot {
-          width: 4px; height: 4px; border-radius: 50%;
-          background: rgba(0,255,136,0.2); flex-shrink: 0;
-        }
+        .nb-tag-num { font-family: monospace; font-size: 9px; letter-spacing: 0.3em; color: rgba(0,255,136,0.2); }
+        .nb-tag-label { font-family: monospace; font-size: clamp(10px,1vw,12px); letter-spacing: 0.2em; text-transform: uppercase; color: rgba(229,229,229,0.25); }
+        .nb-tag-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(0,255,136,0.2); flex-shrink: 0; }
 
         /* ── Vertical text ── */
         .nb-vertical {
-          position: absolute;
-          right: clamp(14px,2vw,28px);
-          top: 50%;
+          position: absolute; right: clamp(14px,2vw,28px); top: 50%;
           transform: translateY(-50%) rotate(90deg);
-          transform-origin: center center;
-          font-family: monospace;
-          font-size: 9px;
-          letter-spacing: 0.4em;
-          text-transform: uppercase;
-          color: rgba(0,255,136,0.15);
-          white-space: nowrap;
-          opacity: 0;
-          z-index: 1;
+          font-family: monospace; font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase;
+          color: rgba(0,255,136,0.15); white-space: nowrap; opacity: 0; z-index: 1;
         }
 
         /* ── Footer ── */
         .nb-footer-left {
           border-top: 1px solid rgba(0,255,136,0.08);
           padding-top: clamp(12px,2vh,20px);
-          margin-top: auto;
-          opacity: 0;
-          position: relative; z-index: 1;
+          margin-top: auto; opacity: 0; position: relative; z-index: 1;
+        }
+        /* Extra bottom padding on notched phones */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+          @media (max-width: 767px) {
+            .nb-footer-left { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+          }
         }
         .nb-footer-right {
           border-top: 1px solid rgba(0,212,255,0.08);
           padding-top: clamp(12px,2vh,20px);
-          margin-top: auto;
-          opacity: 0;
-          position: relative; z-index: 1;
+          margin-top: auto; opacity: 0; position: relative; z-index: 1;
         }
         .nb-footer-label {
-          font-family: monospace; font-size: 10px;
-          letter-spacing: 0.34em; text-transform: uppercase;
+          font-family: monospace; font-size: 10px; letter-spacing: 0.34em; text-transform: uppercase;
           display: block; margin-bottom: 8px;
         }
         .nb-sec-link {
-          font-family: monospace;
-          font-size: clamp(9px,0.95vw,11px);
-          letter-spacing: 0.26em; text-transform: uppercase;
-          text-decoration: none;
+          font-family: monospace; font-size: clamp(9px,0.95vw,11px);
+          letter-spacing: 0.26em; text-transform: uppercase; text-decoration: none;
           display: inline-flex; align-items: center; gap: 3px;
-          cursor: none;
           transition: color 0.2s ease, text-shadow 0.2s ease;
+          -webkit-tap-highlight-color: transparent;
         }
+        @media (min-width: 768px) { .nb-sec-link { cursor: none; } }
 
         /* ── Avail badge ── */
         .nb-avail {
@@ -394,8 +374,7 @@ const Navbar = () => {
         }
         .nb-avail-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: #00ff88;
-          box-shadow: 0 0 8px rgba(0,255,136,0.8);
+          background: #00ff88; box-shadow: 0 0 8px rgba(0,255,136,0.8);
           animation: nb-pulse 2s ease-in-out infinite;
         }
         @keyframes nb-pulse {
@@ -404,26 +383,14 @@ const Navbar = () => {
         }
         .nb-avail-text {
           font-family: monospace; font-size: 10px;
-          letter-spacing: 0.3em; text-transform: uppercase;
-          color: rgba(0,255,136,0.5);
+          letter-spacing: 0.3em; text-transform: uppercase; color: rgba(0,255,136,0.5);
         }
 
         /* ── Divider neon line ── */
         .nb-divider-line {
-          position: absolute;
-          top: 0; bottom: 0;
-          left: 58%;
-          width: 1px;
-          background: linear-gradient(
-            to bottom,
-            transparent 0%,
-            rgba(0,255,136,0.3) 20%,
-            rgba(0,212,255,0.3) 50%,
-            rgba(183,123,255,0.2) 80%,
-            transparent 100%
-          );
-          z-index: 10;
-          box-shadow: 0 0 8px rgba(0,255,136,0.08);
+          position: absolute; top: 0; bottom: 0; left: 58%; width: 1px;
+          background: linear-gradient(to bottom, transparent 0%, rgba(0,255,136,0.3) 20%, rgba(0,212,255,0.3) 50%, rgba(183,123,255,0.2) 80%, transparent 100%);
+          z-index: 10; box-shadow: 0 0 8px rgba(0,255,136,0.08);
         }
       `}</style>
 
@@ -447,10 +414,8 @@ const Navbar = () => {
         {/* Neon divider between panels */}
         <div className="nb-divider-line" />
 
-        {/* ── LEFT — deep dark ─────────────────────────────── */}
+        {/* ── LEFT ─────────────────────────────── */}
         <div ref={leftPanelRef} className="nb-left">
-
-          {/* Top bar */}
           <div className="nb-topbar" style={{ borderBottom: "1px solid rgba(0,255,136,0.06)" }}>
             <span className="nb-topbar-label" style={{ color: "rgba(0,255,136,0.3)" }}>
               <span style={{ color: "rgba(0,255,136,0.18)" }}>~/</span>navigation
@@ -461,7 +426,6 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Links */}
           <nav className="nb-links" style={{ paddingBlock: "clamp(16px,2.5vh,32px)" }}>
             {PRIMARY_LINKS.map((link, i) => (
               <div key={i} className="nb-link-wrap"
@@ -483,7 +447,6 @@ const Navbar = () => {
             ))}
           </nav>
 
-          {/* Footer left — email */}
           <div ref={footerLeftRef} className="nb-footer-left">
             <span className="nb-footer-label" style={{ color: "rgba(0,255,136,0.25)" }}>
               <span style={{ color: "rgba(0,255,136,0.15)" }}>// </span>Email
@@ -507,76 +470,45 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* ── RIGHT — slightly lighter dark ───────────────── */}
+        {/* ── RIGHT ───────────────────────────── */}
         <div ref={rightPanelRef} className="nb-right">
-
-          {/* Grid texture */}
           <div className="nb-grid-pattern" />
-
-          {/* Top bar */}
           <div className="nb-topbar" style={{ borderBottom: "1px solid rgba(0,212,255,0.06)" }}>
             <span className="nb-topbar-label" style={{ color: "rgba(0,212,255,0.35)" }}>Anshu Raj</span>
-            <span className="nb-topbar-label" style={{
-              color: "rgba(229,229,229,0.15)",
-              fontVariantNumeric: "tabular-nums",
-            }}>2025</span>
+            <span className="nb-topbar-label" style={{ color: "rgba(229,229,229,0.15)", fontVariantNumeric: "tabular-nums" }}>2025</span>
           </div>
 
-          {/* Tags — mirror the links */}
           <div style={{ marginBlock: "auto", paddingBlock: "clamp(16px,2.5vh,32px)", position: "relative", zIndex: 1 }}>
-            <span style={{
-              fontFamily: "monospace", fontSize: 9, letterSpacing: "0.36em",
-              textTransform: "uppercase", color: "rgba(0,212,255,0.2)",
-              display: "block", marginBottom: "clamp(18px,3vh,36px)",
-            }}>
+            <span style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: "0.36em", textTransform: "uppercase", color: "rgba(0,212,255,0.2)", display: "block", marginBottom: "clamp(18px,3vh,36px)" }}>
               Index
             </span>
             {PRIMARY_LINKS.map((link, i) => {
               const isHov = hoveredIdx === i;
               return (
-                <div
-                  key={i}
-                  className="nb-tag-row"
-                  ref={(el) => (rightTagsRef.current[i] = el)}
+                <div key={i} className="nb-tag-row" ref={(el) => (rightTagsRef.current[i] = el)}
                   style={{
                     paddingLeft: isHov ? "10px" : "0",
                     transition: "padding-left 0.2s ease",
                     borderLeft: isHov ? "1px solid #00ff88" : "1px solid rgba(0,255,136,0.06)",
                   }}
                 >
-                  <span className="nb-tag-num" style={isHov ? { color: "#00ff88" } : {}}>
-                    {link.num}
-                  </span>
-                  <span
-                    className="nb-tag-dot"
-                    style={isHov ? { background: "#00ff88", boxShadow: "0 0 6px rgba(0,255,136,0.8)" } : {}}
-                  />
-                  <span
-                    className="nb-tag-label"
-                    style={isHov ? { color: "#00ff88", textShadow: "0 0 10px rgba(0,255,136,0.35)" } : {}}
-                  >
+                  <span className="nb-tag-num" style={isHov ? { color: "#00ff88" } : {}}>{link.num}</span>
+                  <span className="nb-tag-dot" style={isHov ? { background: "#00ff88", boxShadow: "0 0 6px rgba(0,255,136,0.8)" } : {}} />
+                  <span className="nb-tag-label" style={isHov ? { color: "#00ff88", textShadow: "0 0 10px rgba(0,255,136,0.35)" } : {}}>
                     {link.tag}
                   </span>
                   {isHov && (
-                    <span style={{
-                      fontFamily: "monospace", fontSize: 9,
-                      color: "rgba(0,255,136,0.4)", letterSpacing: "0.2em",
-                      marginLeft: "auto",
-                    }}>
-                      ↗
-                    </span>
+                    <span style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(0,255,136,0.4)", letterSpacing: "0.2em", marginLeft: "auto" }}>↗</span>
                   )}
                 </div>
               );
             })}
           </div>
 
-          {/* Vertical decorative text */}
           <span ref={verticalTextRef} className="nb-vertical">
             Full-Stack Developer · 3D & Animation Specialist
           </span>
 
-          {/* Footer right — socials */}
           <div ref={footerRightRef} className="nb-footer-right">
             <span className="nb-footer-label" style={{ color: "rgba(0,212,255,0.25)" }}>
               <span style={{ color: "rgba(0,212,255,0.15)" }}>// </span>Connect
@@ -588,14 +520,8 @@ const Navbar = () => {
                     href={s.href} target="_blank" rel="noopener noreferrer"
                     className="nb-sec-link"
                     style={{ color: "rgba(229,229,229,0.25)" }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "#00d4ff";
-                      e.currentTarget.style.textShadow = "0 0 12px rgba(0,212,255,0.4)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "rgba(229,229,229,0.25)";
-                      e.currentTarget.style.textShadow = "none";
-                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "#00d4ff"; e.currentTarget.style.textShadow = "0 0 12px rgba(0,212,255,0.4)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(229,229,229,0.25)"; e.currentTarget.style.textShadow = "none"; }}
                   >
                     {s.name}
                     <Icon icon="lucide:arrow-up-right" style={{ width: 9, height: 9 }} />
