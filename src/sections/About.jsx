@@ -1,876 +1,583 @@
-
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/all";
-import { achievements, stats } from "../constants";
+import { achievements } from "../constants";
 import { Icon } from "@iconify/react/dist/iconify.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ─── Tag Pills (skills) ────────────────────────────────── */
-const TAGS = [
-  { label: "React / Next.js",   color: "#00ff88" },
-  { label: "Node.js / Express", color: "#00d4ff" },
-  { label: "Three.js",          color: "#b77bff" },
-  { label: "GSAP",              color: "#00ff88" },
-  { label: "WebGL / Shaders",   color: "#00d4ff" },
-  { label: "MongoDB",           color: "#b77bff" },
-  { label: "Socket.io",         color: "#00ff88" },
-  { label: "TypeScript",        color: "#00d4ff" },
-  { label: "Google Gemini AI",  color: "#b77bff" },
-];
+export default function About() {
+  const sectionRef = useRef(null);
+  const sheryDone  = useRef(false);
 
-/* ─── Animated stat counter ────────────────────────────── */
-const StatCounter = ({ number, label }) => {
-  const [val, setVal] = useState("0");
-  const ref = useRef(null);
-  const suffix = number.replace(/[0-9]/g, "");
-  const target  = parseInt(number, 10);
-
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (!e.isIntersecting) return;
-      obs.disconnect();
-      const dur = 1800, start = performance.now();
-      const tick = (now) => {
-        const t = Math.min((now - start) / dur, 1);
-        const ease = 1 - Math.pow(1 - t, 3);
-        setVal(Math.round(ease * target) + suffix);
-        if (t < 1) requestAnimationFrame(tick);
-        else setVal(number);
-      };
-      requestAnimationFrame(tick);
-    }, { threshold: 0.5 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [target, suffix, number]);
-
-  return (
-    <div
-      ref={ref}
-      className="relative group flex flex-col items-start justify-end p-5 sm:p-8 md:p-10 overflow-hidden transition-colors duration-300"
-      style={{ background: "transparent" }}
-    >
-      {/* Hover fill */}
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{ background: "rgba(0,255,136,0.04)" }}
-      />
-      <span
-        className="font-display font-bold leading-none tabular-nums mb-3"
-        style={{
-          fontSize: "clamp(3rem,7vw,6rem)",
-          color: "#00ff88",
-          textShadow: "0 0 40px rgba(0,255,136,0.2)",
-        }}
-      >
-        {val}
-      </span>
-      <span
-        className="font-mono uppercase tracking-[0.28em]"
-        style={{ fontSize: 11, color: "rgba(229,229,229,0.45)" }}
-      >
-        {label}
-      </span>
-    </div>
-  );
-};
-
-/* ─── About Section ─────────────────────────────────────── */
-const About = () => {
-  const sectionRef   = useRef(null);
-  const dualImgRef   = useRef(null);
-  const maskLayerRef = useRef(null);
-  const currentSize  = useRef(0);
-
-  /* line + pill refs */
-  const pill1 = useRef(null);
-  const pill2 = useRef(null);
-  const pill3 = useRef(null);
-  const pill4 = useRef(null);
-
-  const line1 = useRef(null);
-  const line2 = useRef(null);
-  const line3 = useRef(null);
-  const line4 = useRef(null);
+  const pill1 = useRef(null); const pill2 = useRef(null);
+  const pill3 = useRef(null); const pill4 = useRef(null);
+  const line1 = useRef(null); const line2 = useRef(null);
+  const line3 = useRef(null); const line4 = useRef(null);
   const line5 = useRef(null);
+  const bioRef = useRef(null);
+  const achRef = useRef(null);
 
-  const tagsRef      = useRef(null);
-  const copyRef      = useRef(null);
-  const achieveRef   = useRef(null);
+  /* ── Shery imageEffect ── */
+  useEffect(() => {
+    if (sheryDone.current) return;
+    const boot = () => {
+      if (!window.Shery) { setTimeout(boot, 120); return; }
+      const container = document.querySelector(".about-img-div");
+      if (!container) return;
+      const imgs = [...container.querySelectorAll("img")];
+      const pending = imgs.filter(i => !i.complete || !i.naturalWidth);
+      const go = () => {
+        if (sheryDone.current) return;
+        sheryDone.current = true;
+        window.Shery.imageEffect(".about-img-div", {
+          style: 5, gooey: true,
+          config: {
+            a: { value: 2, range: [0, 30] },
+            b: { value: 0.75, range: [-1, 1] },
+            zindex: { value: 1, range: [-9999999, 9999999] },
+            aspect: { value: 0.724 },
+            gooey: { value: true },
+            infiniteGooey: { value: false },
+            growSize: { value: 4, range: [1, 15] },
+            durationOut: { value: 1, range: [0.1, 5] },
+            durationIn: { value: 1.5, range: [0.1, 5] },
+            displaceAmount: { value: 0.5 },
+            masker: { value: true },
+            maskVal: { value: 1.23, range: [1, 5] },
+            scrollType: { value: 0 },
+            geoVertex: { value: 1, range: [1, 64] },
+            noEffectGooey: { value: true },
+            onMouse: { value: 1 },
+            noise_speed: { value: 0.5, range: [0, 10] },
+            metaball: { value: 0.33, range: [0, 2] },
+            discard_threshold: { value: 0.5, range: [0, 1] },
+            antialias_threshold: { value: 0.01, range: [0, 0.1] },
+            noise_height: { value: 0.5, range: [0, 2] },
+            noise_scale: { value: 10, range: [0, 100] },
+          },
+        });
+        const patch = () => {
+          const canvas = container.querySelector("canvas");
+          const wrap   = container.querySelector("._canvas_container") || container;
+          if (canvas) {
+            canvas.style.position = "absolute"; canvas.style.top = "0";
+            canvas.style.left = "0"; canvas.style.width = "100%";
+            canvas.style.height = "100%"; canvas.style.zIndex = "1";
+          }
+          if (wrap && wrap !== container) {
+            wrap.style.position = "absolute"; wrap.style.top = "0";
+            wrap.style.left = "0"; wrap.style.width = "100%"; wrap.style.height = "100%";
+          }
+          if (!canvas) requestAnimationFrame(patch);
+        };
+        requestAnimationFrame(patch);
+      };
+      if (!pending.length) { go(); return; }
+      let n = 0;
+      pending.forEach(img => {
+        const done = () => { if (++n >= pending.length) go(); };
+        img.addEventListener("load", done, { once: true });
+        img.addEventListener("error", done, { once: true });
+      });
+    };
+    boot();
+  }, []);
 
+  /* ── GSAP ── */
   useGSAP(() => {
     const ctx = gsap.context(() => {
 
-      /* ── Statement: word reveals + pill expansions ── */
-      const lineData = [
-        { line: line1, pill: pill1 },
-        { line: line2, pill: pill2 },
-        { line: line3, pill: pill3 },
-        { line: line4, pill: null  },
-        { line: line5, pill: pill4 },
-      ];
-
-      lineData.forEach(({ line, pill }) => {
-        const words = line.current?.querySelectorAll(".word");
+      [line1, line2, line3, line4, line5].forEach(line => {
+        const words = line.current?.querySelectorAll(".w");
         if (words?.length) {
           gsap.from(words, {
-            yPercent: 70,
-            opacity: 0,
-            stagger: 0.07,
-            scrollTrigger: {
-              trigger: line.current,
-              start: "top 88%",
-              end: "top 52%",
-              scrub: 1.2,
-            },
+            y: "115%", opacity: 0, stagger: 0.055, duration: 1.0, ease: "power4.out",
+            scrollTrigger: { trigger: line.current, start: "top 90%", once: true },
           });
         }
-        if (pill?.current) {
-          const pillWidth = window.innerWidth < 640 ? 0 : window.innerWidth < 1024 ? 100 : 160;
-          if (pillWidth > 0) {
-            gsap.to(pill.current, {
-              width: pillWidth,
-              scrollTrigger: {
-                trigger: line.current,
-                start: "top 90%",
-                end: "top 45%",
-                scrub: 1.2,
-              },
-            });
-          }
-        }
       });
 
-      /* ── Copy / tag reveal ── */
-      if (copyRef.current) {
-        const revealItems = copyRef.current.querySelectorAll(".reveal-item");
-        gsap.set(revealItems, { yPercent: 20, opacity: 0 });
-        gsap.to(revealItems, {
-          yPercent: 0,
-          opacity: 1,
-          stagger: 0.12,
-          duration: 0.9,
-          ease: "power3.out",
-          clearProps: "transform,opacity",
-          scrollTrigger: { trigger: copyRef.current, start: "top 85%", once: true },
+      [
+        { pill: pill1, line: line1 }, { pill: pill2, line: line2 },
+        { pill: pill3, line: line3 }, { pill: pill4, line: line5 },
+      ].forEach(({ pill, line }) => {
+        if (!pill.current) return;
+        const w = window.innerWidth < 640 ? 0 : window.innerWidth < 1024 ? 90 : 150;
+        if (!w) return;
+        gsap.to(pill.current, {
+          width: w, ease: "power3.out",
+          scrollTrigger: { trigger: line.current, start: "top 86%", end: "top 40%", scrub: 1.4 },
+        });
+      });
+
+      if (bioRef.current) {
+        gsap.from(bioRef.current.querySelectorAll(".bio-item"), {
+          y: 40, opacity: 0, stagger: 0.1, duration: 0.9, ease: "power3.out",
+          scrollTrigger: { trigger: bioRef.current, start: "top 84%", once: true },
         });
       }
 
-      if (tagsRef.current) {
-        gsap.from(tagsRef.current.querySelectorAll("span"), {
-          scale: 0.75,
-          opacity: 0,
-          stagger: 0.045,
-          duration: 0.5,
-          ease: "back.out(1.7)",
-          scrollTrigger: { trigger: tagsRef.current, start: "top 88%" },
+      if (achRef.current) {
+        gsap.from(achRef.current.querySelectorAll(".ach-row"), {
+          x: -32, opacity: 0, stagger: 0.06, duration: 0.7, ease: "power2.out",
+          scrollTrigger: { trigger: achRef.current, start: "top 88%", once: true },
         });
       }
 
-      /* ── Achievements ── */
-      if (achieveRef.current) {
-        const items = achieveRef.current.querySelectorAll(".achieve-item");
-        // Set explicit starting state so elements are invisible only until trigger fires
-        gsap.set(items, { x: -40, opacity: 0 });
-        gsap.to(items, {
-          x: 0,
-          opacity: 1,
-          stagger: 0.08,
-          duration: 0.7,
-          ease: "power2.out",
-          clearProps: "x,opacity",
-          scrollTrigger: {
-            trigger: achieveRef.current,
-            start: "top 90%",
-            once: true,
-            onEnter: () => {},
-          },
+      gsap.utils.toArray(".about-underline").forEach(el => {
+        gsap.from(el, {
+          scaleX: 0, transformOrigin: "left", duration: 1.2, ease: "expo.out",
+          scrollTrigger: { trigger: el, start: "top 92%", once: true },
         });
-      }
+      });
 
-      /* ── Section scale-out ── */
       gsap.to(sectionRef.current, {
-        scale: 0.95,
+        scale: 0.96, opacity: 0.8,
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "bottom 80%",
-          end: "bottom 20%",
-          scrub: true,
+          start: "bottom 75%", end: "bottom 15%", scrub: true,
         },
-        ease: "power1.inOut",
       });
-    }, sectionRef);
 
+    }, sectionRef);
     return () => ctx.revert();
   }, []);
 
-  /* ── Radial mask hover reveal ── */
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-  const LARGE = isMobile ? 55 : 110;
-
-  const handleImgMouseMove = (e) => {
-    const rect = dualImgRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    if (currentSize.current > 0 && maskLayerRef.current) {
-      maskLayerRef.current.style.setProperty("--mx", `${x}px`);
-      maskLayerRef.current.style.setProperty("--my", `${y}px`);
-    }
-  };
-
-  const handleImgEnter = () => {
-    currentSize.current = LARGE;
-    gsap.to(maskLayerRef.current, { "--ms": `${LARGE}px`, duration: 0.55, ease: "back.out(1.7)" });
-  };
-
-  const handleImgLeave = () => {
-    currentSize.current = 0;
-    gsap.to(maskLayerRef.current, { "--ms": "0px", duration: 0.4 });
-  };
-
-  /* Touch reveal for mobile */
-  const handleImgTouch = (e) => {
-    const rect = dualImgRef.current.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    if (maskLayerRef.current) {
-      maskLayerRef.current.style.setProperty("--mx", `${x}px`);
-      maskLayerRef.current.style.setProperty("--my", `${y}px`);
-      currentSize.current = LARGE;
-      gsap.to(maskLayerRef.current, { "--ms": `${LARGE}px`, duration: 0.4, ease: "power2.out" });
-    }
-  };
-
-  const handleImgTouchEnd = () => {
-    currentSize.current = 0;
-    gsap.to(maskLayerRef.current, { "--ms": "0px", duration: 0.6 });
-  };
+  const SectionHeader = ({ num, title }) => (
+    <div className="flex items-center gap-5 mb-12 sm:mb-16">
+      <span className="font-display font-bold leading-none select-none"
+        style={{ fontSize: "clamp(2.5rem,5vw,4rem)", color: "transparent", WebkitTextStroke: "1px rgba(0,255,136,0.22)" }}>
+        {num}
+      </span>
+      <div className="about-underline flex-1 h-px" style={{ background: "rgba(0,255,136,0.18)" }} />
+      <span className="font-mono uppercase tracking-[0.38em]"
+        style={{ fontSize: 10, color: "rgba(0,255,136,0.5)" }}>
+        {title}
+      </span>
+    </div>
+  );
 
   return (
-    <section
-      id="about"
-      ref={sectionRef}
-      className="relative bg-secondary rounded-b-4xl overflow-hidden"
-      style={{ transformOrigin: "top center" }}
-    >
-      {/* Subtle grid */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.04]"
-        style={{
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+
+        /* ── pill image zoom ── */
+        .ab-pill img {
+          transition: transform 0.55s cubic-bezier(0.16,1,0.3,1);
+        }
+        .ab-pill:hover img { transform: translateX(-50%) scale(1.07); }
+
+        /* ── bio tag ── */
+        .bio-tag {
+          display: inline-block;
+          font-family: var(--font-mono);
+          font-size: 10px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          padding: 5px 12px;
+          border-radius: 2px;
+          cursor: default;
+          transition:
+            background 0.2s ease,
+            border-color 0.2s ease,
+            color 0.2s ease,
+            transform 0.22s cubic-bezier(0.16,1,0.3,1);
+        }
+        .bio-tag:hover { transform: translateY(-2px); }
+
+        /* ── ach row ── */
+        .ach-row {
+          transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+
+        /* ── ach internals ── */
+        .ach-bg  { transition: opacity 0.25s ease; }
+        .ach-icon { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+        .ach-dot  { transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+
+        /* ── cta line ── */
+        .cta-line { transition: width 0.35s cubic-bezier(0.16,1,0.3,1); }
+
+        /* ── hobby card ── */
+        .hobby-card {
+          transition:
+            transform 0.35s cubic-bezier(0.16,1,0.3,1),
+            background 0.25s ease,
+            border-color 0.25s ease,
+            box-shadow 0.35s ease;
+        }
+        .hob-icon { transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1); }
+        .hob-bar  { transition: width 0.4s cubic-bezier(0.16,1,0.3,1); }
+        .hob-glow { transition: opacity 0.35s ease; }
+
+        @media (max-width: 639px) {
+          .ab-pill { display: none !important; }
+        }
+      `}</style>
+
+      <section
+        id="about"
+        ref={sectionRef}
+        className="relative"
+        style={{ background: "#111111", transformOrigin: "top center" }}
+      >
+        {/* grid bg */}
+        <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage:
-            "linear-gradient(rgba(0,255,136,1) 1px, transparent 1px)," +
-            "linear-gradient(90deg, rgba(0,255,136,1) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
+            "linear-gradient(rgba(0,255,136,0.04) 1px,transparent 1px)," +
+            "linear-gradient(90deg,rgba(0,255,136,0.04) 1px,transparent 1px)",
+          backgroundSize: "80px 80px",
+        }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none" style={{
+          width: "min(900px,100vw)", height: 500,
+          background: "radial-gradient(ellipse,rgba(0,255,136,0.04) 0%,transparent 70%)",
+        }} />
 
-      {/* Ambient orbs */}
-      <div
-        className="absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(183,123,255,0.07) 0%, transparent 70%)" }}
-      />
-      <div
-        className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%)" }}
-      />
+        {/* ════════════════════════════════
+            01  EDITORIAL HEADLINE
+        ════════════════════════════════ */}
+        <div className="relative z-10 px-[5.5vw] pt-[17vh] pb-[10vh]">
+          <SectionHeader num="03" title="About" />
 
-      <div className="relative z-10">
-
-        {/* ══════════════════════════════════════════════════════
-            01 — Section header
-        ════════════════════════════════════════════════════════ */}
-        <div className="flex justify-between items-start px-4 sm:px-6 md:px-10 pt-12 sm:pt-16 md:pt-20 pb-10 sm:pb-14 md:pb-16">
-          <div className="flex items-center gap-4">
-            <div className="w-8 h-px" style={{ background: "#00ff88" }} />
-            <span
-              className="font-mono uppercase tracking-[0.38em]"
-              style={{ fontSize: 10, color: "rgba(0,255,136,0.65)" }}
+          {[
+            {
+              ref: line1, pill: pill1, pillSrc: "/assets/projects/codexspace.jpg",
+              left: "I Build", right: "Digital",
+              rightStyle: { color: "transparent", WebkitTextStroke: "1.5px rgba(0,255,136,0.4)" },
+            },
+            {
+              ref: line2, pill: pill2, pillSrc: "/assets/projects/gamebit.jpg",
+              left: "Experiences", right: "That", rightStyle: {},
+            },
+            {
+              ref: line3, pill: pill3, pillSrc: "/assets/projects/hyperspace.jpg",
+              left: "Don't",
+              leftStyle: { color: "transparent", WebkitTextStroke: "1.5px rgba(229,229,229,0.2)" },
+              right: "Just", rightStyle: {},
+            },
+            {
+              ref: line4, pill: null,
+              left: "Look", right: "Good —",
+              rightStyle: { color: "transparent", WebkitTextStroke: "1.5px rgba(229,229,229,0.2)" },
+            },
+            {
+              ref: line5, pill: pill4, pillSrc: "/assets/projects/api-hub.jpg",
+              left: "They", right: "Move",
+              rightStyle: { color: "transparent", WebkitTextStroke: "1.5px rgba(229,229,229,0.2)" },
+              extra: "People.",
+              extraStyle: { color: "#00ff88", textShadow: "0 0 80px rgba(0,255,136,0.22)" },
+            },
+          ].map(({ ref, pill, pillSrc, left, leftStyle = {}, right, rightStyle, extra, extraStyle }, i) => (
+            <div key={i} ref={ref}
+              className="flex flex-wrap items-center leading-none"
+              style={{ gap: "clamp(6px,1.5vw,18px)", marginBottom: "clamp(2px,0.4vw,6px)" }}
             >
-              03 · About
-            </span>
-          </div>
-          <span
-            className="font-mono"
-            style={{ fontSize: 10, color: "rgba(229,229,229,0.3)" }}
-          >
-            Est. 2023
-          </span>
-        </div>
-
-        {/* ══════════════════════════════════════════════════════
-            02 — Big editorial statement
-        ════════════════════════════════════════════════════════ */}
-        <div className="px-4 sm:px-6 md:px-10 pb-16 sm:pb-20 md:pb-24 max-w-[1400px] mx-auto">
-
-          {/* Line 1: "I build [pill] digital" */}
-          <div ref={line1} className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 leading-none mb-1 sm:mb-2 overflow-hidden">
-            <span className="word font-display font-bold uppercase text-text"
-              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}>
-              I build
-            </span>
-            {/* Image pill — hidden on small mobile to prevent overflow */}
-            <span
-              ref={pill1}
-              className="hidden sm:inline-block overflow-hidden flex-shrink-0 relative"
-              style={{
-                width: 0,
-                height: "clamp(2rem,7.5vw,7.5rem)",
-                borderRadius: 6,
-                verticalAlign: "middle",
-              }}
-            >
-              <img
-                src="/assets/projects/codexspace.jpg"
-                alt=""
-                className="h-full object-cover object-center absolute left-1/2 -translate-x-1/2"
-                style={{ width: 220 }}
-              />
-            </span>
-            <span
-              className="word font-display font-bold uppercase"
-              style={{
-                fontSize: "clamp(2rem,8.5vw,8.5rem)",
-                letterSpacing: "-0.02em",
-                color: "transparent",
-                WebkitTextStroke: "1.5px rgba(0,255,136,0.4)",
-              }}
-            >
-              digital
-            </span>
-          </div>
-
-          {/* Line 2: "experiences [pill] that" */}
-          <div ref={line2} className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 leading-none mb-1 sm:mb-2 overflow-hidden">
-            <span className="word font-display font-bold uppercase text-text"
-              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}>
-              experiences
-            </span>
-            <span
-              ref={pill2}
-              className="hidden sm:inline-block overflow-hidden flex-shrink-0 relative"
-              style={{
-                width: 0,
-                height: "clamp(2rem,7.5vw,7.5rem)",
-                borderRadius: 6,
-                verticalAlign: "middle",
-              }}
-            >
-              <img
-                src="/assets/projects/gamebit.jpg"
-                alt=""
-                className="h-full object-cover object-center absolute left-1/2 -translate-x-1/2"
-                style={{ width: 220 }}
-              />
-            </span>
-            <span
-              className="word font-display font-bold uppercase text-text"
-              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}
-            >
-              that
-            </span>
-          </div>
-
-          {/* Line 3: "don't [pill] just" */}
-          <div ref={line3} className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 leading-none mb-1 sm:mb-2 overflow-hidden">
-            <span
-              className="word font-display font-bold uppercase"
-              style={{
-                fontSize: "clamp(2rem,8.5vw,8.5rem)",
-                letterSpacing: "-0.02em",
-                color: "transparent",
-                WebkitTextStroke: "1.5px rgba(229,229,229,0.25)",
-              }}
-            >
-              don't
-            </span>
-            <span className="word font-display font-bold uppercase text-text"
-              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}>
-              just
-            </span>
-            <span
-              ref={pill3}
-              className="hidden sm:inline-block overflow-hidden flex-shrink-0 relative"
-              style={{
-                width: 0,
-                height: "clamp(2rem,7.5vw,7.5rem)",
-                borderRadius: 6,
-                verticalAlign: "middle",
-              }}
-            >
-              <img
-                src="/assets/projects/hyperspace.jpg"
-                alt=""
-                className="h-full object-cover object-center absolute left-1/2 -translate-x-1/2"
-                style={{ width: 220 }}
-              />
-            </span>
-          </div>
-
-          {/* Line 4: "look good —" */}
-          <div ref={line4} className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 leading-none mb-1 sm:mb-2 overflow-hidden">
-            <span className="word font-display font-bold uppercase text-text"
-              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}>
-              look
-            </span>
-            <span
-              className="word font-display font-bold uppercase"
-              style={{
-                fontSize: "clamp(2rem,8.5vw,8.5rem)",
-                letterSpacing: "-0.02em",
-                color: "transparent",
-                WebkitTextStroke: "1.5px rgba(229,229,229,0.25)",
-              }}
-            >
-              good —
-            </span>
-          </div>
-
-          {/* Line 5: "they [pill] move people." */}
-          <div ref={line5} className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 leading-none overflow-hidden">
-            <span className="word font-display font-bold uppercase text-text"
-              style={{ fontSize: "clamp(2rem,8.5vw,8.5rem)", letterSpacing: "-0.02em" }}>
-              they
-            </span>
-            <span
-              ref={pill4}
-              className="hidden sm:inline-block overflow-hidden flex-shrink-0 relative"
-              style={{
-                width: 0,
-                height: "clamp(2rem,7.5vw,7.5rem)",
-                borderRadius: 6,
-                verticalAlign: "middle",
-              }}
-            >
-              <img
-                src="/assets/projects/api-hub.jpg"
-                alt=""
-                className="h-full object-cover object-center absolute left-1/2 -translate-x-1/2"
-                style={{ width: 220 }}
-              />
-            </span>
-            <span
-              className="word font-display font-bold uppercase"
-              style={{
-                fontSize: "clamp(2rem,8.5vw,8.5rem)",
-                letterSpacing: "-0.02em",
-                color: "transparent",
-                WebkitTextStroke: "1.5px rgba(229,229,229,0.25)",
-              }}
-            >
-              move
-            </span>
-            <span className="word font-display font-bold uppercase"
-              style={{
-                fontSize: "clamp(2rem,8.5vw,8.5rem)",
-                letterSpacing: "-0.02em",
-                color: "#00ff88",
-                textShadow: "0 0 60px rgba(0,255,136,0.2)",
-              }}>
-              people.
-            </span>
-          </div>
-        </div>
-
-        {/* ══════════════════════════════════════════════════════
-            03 — Profile + Copy (hover reveal)
-        ════════════════════════════════════════════════════════ */}
-        <div className="px-4 sm:px-6 md:px-10 pb-20 sm:pb-24 md:pb-28 grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-12 md:gap-16 items-center max-w-[1400px] mx-auto">
-
-          {/* ── Profile image with radial mask reveal ── */}
-          <div
-            ref={dualImgRef}
-            className="relative overflow-hidden rounded-sm"
-            style={{
-              height: "clamp(280px, 55vw, 680px)",
-              cursor: "none",
-            }}
-            onMouseMove={handleImgMouseMove}
-            onMouseEnter={handleImgEnter}
-            onMouseLeave={handleImgLeave}
-            onTouchMove={handleImgTouch}
-            onTouchEnd={handleImgTouchEnd}
-          >
-            {/* Base image — anshu-masked.jpg, always visible */}
-            <img
-              src="/images/anshu-masked.jpg"
-              alt="Anshu Raj"
-              className="absolute inset-0 w-full h-full object-cover object-top"
-            />
-
-            {/* Reveal layer — anshu-profile.jpg, only visible inside the cursor circle */}
-            <div
-              ref={maskLayerRef}
-              className="absolute inset-0 w-full h-full"
-              style={{
-                "--ms": "0px",
-                "--mx": "50%",
-                "--my": "50%",
-                maskImage:
-                  "radial-gradient(circle var(--ms) at var(--mx) var(--my), white 99%, transparent 100%)",
-                WebkitMaskImage:
-                  "radial-gradient(circle var(--ms) at var(--mx) var(--my), white 99%, transparent 100%)",
-              }}
-            >
-              <img
-                src="/images/anshu-profile.jpg"
-                alt="Anshu Raj — revealed"
-                className="w-full h-full object-cover object-top"
-              />
-            </div>
-
-            {/* Bottom gradient + label */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(to top, rgba(10,10,10,0.85) 0%, transparent 45%)",
-              }}
-            />
-            <div
-              className="absolute bottom-6 left-6 font-mono uppercase tracking-[0.35em] hidden sm:block"
-              style={{ fontSize: 9, color: "rgba(0,255,136,0.65)" }}
-            >
-              Hover to reveal ✦
-            </div>
-            <div
-              className="absolute bottom-6 left-6 font-mono uppercase tracking-[0.35em] sm:hidden"
-              style={{ fontSize: 9, color: "rgba(0,255,136,0.65)" }}
-            >
-              Tap to reveal ✦
-            </div>
-
-            {/* Corner brackets */}
-            <svg className="absolute top-0 left-0 w-9 h-9" viewBox="0 0 36 36" fill="none">
-              <path d="M36 0 L0 0 L0 36" stroke="#00ff88" strokeWidth="1.5" strokeOpacity="0.45"/>
-            </svg>
-            <svg className="absolute top-0 right-0 w-9 h-9" viewBox="0 0 36 36" fill="none">
-              <path d="M0 0 L36 0 L36 36" stroke="#00ff88" strokeWidth="1.5" strokeOpacity="0.45"/>
-            </svg>
-            <svg className="absolute bottom-0 left-0 w-9 h-9" viewBox="0 0 36 36" fill="none">
-              <path d="M36 36 L0 36 L0 0" stroke="#00ff88" strokeWidth="1.5" strokeOpacity="0.45"/>
-            </svg>
-            <svg className="absolute bottom-0 right-0 w-9 h-9" viewBox="0 0 36 36" fill="none">
-              <path d="M0 36 L36 36 L36 0" stroke="#00ff88" strokeWidth="1.5" strokeOpacity="0.45"/>
-            </svg>
-          </div>
-
-          {/* ── Copy ── */}
-          <div ref={copyRef} className="flex flex-col gap-8">
-
-            {/* Heading */}
-            <div className="reveal-item">
-              <h2
-                className="font-display font-bold uppercase leading-[0.93]"
-                style={{
-                  fontSize: "clamp(2rem,5.5vw,5.5rem)",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                Designed to
-                <br />
-                <span
-                  style={{
-                    color: "transparent",
-                    WebkitTextStroke: "1.5px #00ff88",
-                  }}
-                >
-                  Disrupt
+              <div className="overflow-hidden">
+                <span className="w block font-display font-black uppercase text-text"
+                  style={{ fontSize: "clamp(2.2rem,7.2vw,7.2rem)", lineHeight: 1, letterSpacing: "-0.02em", ...leftStyle }}>
+                  {left}
                 </span>
-                <br />
-                the Ordinary
-              </h2>
-            </div>
+              </div>
 
-            {/* Bio paragraphs */}
-            <div className="reveal-item space-y-4">
-              <p
-                className="font-mono leading-[1.85]"
-                style={{ fontSize: 14, color: "rgba(229,229,229,0.55)", maxWidth: 460 }}
-              >
-                I'm Anshu Raj — a full-stack developer with a compulsion for
-                interfaces that feel alive. Every transition is earned, every
-                shader intentional.
-              </p>
-              <p
-                className="font-mono leading-[1.85]"
-                style={{ fontSize: 14, color: "rgba(229,229,229,0.55)", maxWidth: 460 }}
-              >
-                
-From WebGL particle systems to real-time Socket.io collaboration, 
-I work across both creative front-end experiences and backend architecture. 
-I focus on building thoughtful, 
-well-executed solutions that balance visual design with technical reliability.
-              </p>
-            </div>
-
-            {/* Tag pills */}
-            <div ref={tagsRef} className="reveal-item flex flex-wrap gap-2">
-              {TAGS.map((tag) => (
-                <span
-                  key={tag.label}
-                  className="font-mono uppercase transition-colors duration-200"
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: "0.2em",
-                    padding: "6px 14px",
-                    border: `1px solid ${tag.color}40`,
-                    color: `${tag.color}cc`,
-                    borderRadius: 2,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = `${tag.color}15`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                  }}
-                >
-                  {tag.label}
+              {pill && (
+                <span ref={pill}
+                  className="ab-pill inline-block overflow-hidden relative flex-shrink-0"
+                  style={{ width: 0, height: "clamp(2.2rem,6.4vw,6.4rem)", borderRadius: 4, verticalAlign: "middle" }}>
+                  <img src={pillSrc} alt=""
+                    className="h-full object-cover object-center absolute left-1/2 -translate-x-1/2"
+                    style={{ width: 240 }} />
                 </span>
-              ))}
-            </div>
+              )}
 
-            {/* CTA */}
-            <div className="reveal-item flex items-center gap-4 pt-2">
-              <a
-                href="https://github.com/anshu-c8NETed"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative flex items-center gap-2 font-mono uppercase"
-                style={{
-                  fontSize: 11,
-                  letterSpacing: "0.25em",
-                  color: "#00ff88",
-                  textDecoration: "none",
-                }}
-              >
-                <div
-                  className="w-8 h-px transition-all duration-300 group-hover:w-14"
-                  style={{ background: "#00ff88" }}
-                />
-                View GitHub
-              </a>
-              <a
-                href="mailto:rajanshu2123@gmail.com"
-                className="group relative flex items-center gap-2 font-mono uppercase"
-                style={{
-                  fontSize: 11,
-                  letterSpacing: "0.25em",
-                  color: "rgba(229,229,229,0.4)",
-                  textDecoration: "none",
-                }}
-              >
-                <div
-                  className="w-8 h-px transition-all duration-300 group-hover:w-14"
-                  style={{ background: "rgba(229,229,229,0.4)" }}
-                />
-                Say Hello
-              </a>
-            </div>
-          </div>
-        </div>
+              <div className="overflow-hidden">
+                <span className="w block font-display font-black uppercase text-text"
+                  style={{ fontSize: "clamp(2.2rem,7.2vw,7.2rem)", lineHeight: 1, letterSpacing: "-0.02em", ...rightStyle }}>
+                  {right}
+                </span>
+              </div>
 
-
-        {/* ══════════════════════════════════════════════════════
-            05 — Achievements & Hobbies
-        ════════════════════════════════════════════════════════ */}
-        <div ref={achieveRef} className="px-4 sm:px-6 md:px-10 py-16 sm:py-20 md:py-24 max-w-[1400px] mx-auto">
-
-          {/* ── Achievements ─────────────────────────────── */}
-          <div className="flex items-center gap-4 mb-12">
-            <span
-              className="font-mono uppercase tracking-[0.38em]"
-              style={{ fontSize: 10, color: "rgba(0,255,136,0.55)" }}
-            >
-              04
-            </span>
-            <div className="w-px h-4" style={{ background: "rgba(0,255,136,0.25)" }} />
-            <h3
-              className="font-display font-bold uppercase"
-              style={{ fontSize: "clamp(1.4rem,3.5vw,2.6rem)", letterSpacing: "-0.02em", color: "#e5e5e5" }}
-            >
-              Achievements &amp; Certifications
-            </h3>
-          </div>
-
-          {/* Achievement rows — clean ruled list */}
-          <div className="mb-20">
-            {achievements.map((ach, i) => {
-              const accent   = ["#00ff88","#00d4ff","#b77bff","#ffcc44","#00ff88"][i % 5];
-              const iconList = ["lucide:code-2","lucide:award","lucide:brain","lucide:zap","lucide:shield-check"];
-              return (
-                <div
-                  key={i}
-                  className="achieve-item group relative flex items-center gap-5 sm:gap-8 py-5 sm:py-6 transition-all duration-300"
-                  style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
-                >
-                  {/* Hover fill strip */}
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none"
-                    style={{
-                      background: `linear-gradient(to right, ${accent}08, transparent 60%)`,
-                    }}
-                  />
-
-                  {/* Left: index */}
-                  <span
-                    className="font-mono flex-shrink-0 tabular-nums w-6 text-right"
-                    style={{ fontSize: 11, color: "rgba(255,255,255,0.18)", letterSpacing: "0.1em" }}
-                  >
-                    {String(i + 1).padStart(2, "0")}
+              {extra && (
+                <div className="overflow-hidden">
+                  <span className="w block font-display font-black uppercase"
+                    style={{ fontSize: "clamp(2.2rem,7.2vw,7.2rem)", lineHeight: 1, letterSpacing: "-0.02em", ...extraStyle }}>
+                    {extra}
                   </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
 
-                  {/* Icon dot */}
-                  <div
-                    className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                    style={{
-                      background: `${accent}12`,
-                      border: `1px solid ${accent}25`,
+        {/* ════════════════════════════════
+            02  PROFILE + BIO
+        ════════════════════════════════ */}
+        <div className="relative z-10 px-[5.5vw] pb-[15vh]">
+          <div className="about-underline h-px mb-[8vw]" style={{ background: "rgba(255,255,255,0.08)" }} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-[5vw] items-start">
+
+            {/* photo */}
+            <div className="relative rounded-sm overflow-hidden"
+              style={{ height: "clamp(340px,60vw,720px)" }}>
+              <div className="about-img-div" style={{ position: "relative", width: "100%", height: "100%" }}>
+                <img src="/images/anshu-masked.jpg" alt="Anshu Raj"
+                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", display: "block" }} />
+                <img src="/images/anshu-profile.jpg" alt="Anshu Raj colour"
+                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", display: "block" }} />
+              </div>
+
+              <div className="absolute inset-0 pointer-events-none"
+                style={{ background: "linear-gradient(to top,rgba(17,17,17,0.9) 0%,transparent 38%)", zIndex: 2 }} />
+
+              <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 flex items-end justify-between"
+                style={{ zIndex: 3 }}>
+                <div>
+                  <p className="font-display font-bold uppercase text-text mb-0.5"
+                    style={{ fontSize: "clamp(1rem,2.2vw,1.6rem)", letterSpacing: "-0.01em" }}>
+                    Anshu Raj
+                  </p>
+                  <p className="font-mono uppercase tracking-[0.28em]"
+                    style={{ fontSize: 9, color: "rgba(0,255,136,0.6)" }}>
+                    Full-Stack · Creative Dev
+                  </p>
+                </div>
+                <p className="font-mono uppercase tracking-[0.28em] hidden sm:block"
+                  style={{ fontSize: 9, color: "rgba(0,255,136,0.35)" }}>
+                  Hover to reveal ✦
+                </p>
+              </div>
+
+              {[
+                { cls: "top-0 left-0",     d: "M36 0 L0 0 L0 36"   },
+                { cls: "top-0 right-0",    d: "M0 0 L36 0 L36 36"  },
+                { cls: "bottom-0 left-0",  d: "M36 36 L0 36 L0 0"  },
+                { cls: "bottom-0 right-0", d: "M0 36 L36 36 L36 0" },
+              ].map(({ cls, d }) => (
+                <svg key={d} className={`absolute w-9 h-9 ${cls}`} style={{ zIndex: 4 }} viewBox="0 0 36 36" fill="none">
+                  <path d={d} stroke="#00ff88" strokeWidth="1.5" strokeOpacity="0.4" />
+                </svg>
+              ))}
+
+              <div className="absolute top-0 left-0 w-[2px] h-full pointer-events-none"
+                style={{ background: "linear-gradient(to bottom,transparent,#00ff8850 35%,#00d4ff40 70%,transparent)", zIndex: 3 }} />
+            </div>
+
+            {/* bio */}
+            <div ref={bioRef} className="flex flex-col gap-10 pt-2">
+
+              <div className="bio-item">
+                <h2 className="font-display font-black uppercase leading-[0.9]"
+                  style={{ fontSize: "clamp(2.4rem,5.5vw,5.2rem)", letterSpacing: "-0.03em" }}>
+                  Designed<br />to{" "}
+                  <span style={{ color: "transparent", WebkitTextStroke: "1.5px #00ff88" }}>Disrupt</span>
+                  <br />the Ordinary
+                </h2>
+              </div>
+
+              <div className="bio-item about-underline h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
+
+              <div className="bio-item" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300, fontSize: "clamp(13px,1.3vw,15px)", lineHeight: 1.85, color: "rgba(229,229,229,0.55)", letterSpacing: "0.01em", maxWidth: 480 }}>
+                  I'm Anshu Raj — a full-stack developer with a compulsion for interfaces
+                  that feel alive. Every transition is earned, every shader intentional.
+                </p>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300, fontSize: "clamp(13px,1.3vw,15px)", lineHeight: 1.85, color: "rgba(229,229,229,0.55)", letterSpacing: "0.01em", maxWidth: 480 }}>
+                  From WebGL particle systems to real-time Socket.io collaboration, I work
+                  across creative front-end and backend architecture — balancing visual
+                  design with technical reliability.
+                </p>
+              </div>
+
+              <div className="bio-item" style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {[
+                  { label: "React / Next.js",   color: "#00ff88" },
+                  { label: "Node.js / Express", color: "#00d4ff" },
+                  { label: "Three.js",          color: "#b77bff" },
+                  { label: "GSAP",              color: "#00ff88" },
+                  { label: "WebGL / Shaders",   color: "#00d4ff" },
+                  { label: "MongoDB",           color: "#b77bff" },
+                  { label: "Socket.io",         color: "#00ff88" },
+                  { label: "TypeScript",        color: "#00d4ff" },
+                  { label: "Google Gemini AI",  color: "#b77bff" },
+                ].map(tag => (
+                  <span key={tag.label} className="bio-tag"
+                    style={{ border: `1px solid ${tag.color}30`, color: `${tag.color}aa` }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background  = `${tag.color}12`;
+                      e.currentTarget.style.borderColor = `${tag.color}65`;
+                      e.currentTarget.style.color       = tag.color;
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background  = "transparent";
+                      e.currentTarget.style.borderColor = `${tag.color}30`;
+                      e.currentTarget.style.color       = `${tag.color}aa`;
                     }}
                   >
-                    <Icon icon={iconList[i % iconList.length]} style={{ color: accent, width: 14, height: 14 }} />
-                  </div>
+                    {tag.label}
+                  </span>
+                ))}
+              </div>
 
-                  {/* Text */}
-                  <p
-                    className="flex-1 font-mono leading-snug transition-colors duration-300 group-hover:text-text"
-                    style={{ fontSize: "clamp(0.75rem,1.5vw,0.88rem)", color: "rgba(229,229,229,0.55)" }}
+              <div className="bio-item" style={{ display: "flex", alignItems: "center", gap: 32 }}>
+                {[
+                  { label: "View GitHub", href: "https://github.com/anshu-c8NETed", color: "#00ff88" },
+                  { label: "Say Hello",   href: "mailto:rajanshu2123@gmail.com",     color: "rgba(229,229,229,0.35)" },
+                ].map(({ label, href, color }) => (
+                  <a key={label} href={href}
+                    target={href.startsWith("http") ? "_blank" : undefined}
+                    rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+                    className="group flex items-center font-mono uppercase"
+                    style={{ gap: 10, fontSize: 11, letterSpacing: "0.28em", color, textDecoration: "none",
+                      transition: "color 0.2s ease" }}
+                    onMouseEnter={e => {
+                      e.currentTarget.querySelector(".cta-line").style.width = "48px";
+                      if (color !== "#00ff88") e.currentTarget.style.color = "rgba(229,229,229,0.7)";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.querySelector(".cta-line").style.width = "24px";
+                      if (color !== "#00ff88") e.currentTarget.style.color = color;
+                    }}
                   >
-                    {ach}
-                  </p>
-
-                  {/* Right: accent pip that slides in */}
-                  <div
-                    className="flex-shrink-0 w-1.5 h-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
-                    style={{ background: accent, boxShadow: `0 0 6px ${accent}` }}
-                  />
-                </div>
-              );
-            })}
+                    <div className="cta-line" style={{ width: 24, height: 1, background: color }} />
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* ── Divider ───────────────────────────────────── */}
-          <div
-            className="mb-16 h-px"
-            style={{ background: "linear-gradient(to right, transparent, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.08) 70%, transparent)" }}
-          />
+        {/* ════════════════════════════════
+            03  ACHIEVEMENTS
+        ════════════════════════════════ */}
+        <div ref={achRef} className="relative z-10 px-[5.5vw] pb-[14vh]">
+          <SectionHeader num="04" title="Achievements & Certifications" />
 
-          {/* ── Hobbies ──────────────────────────────────── */}
-          <div className="flex items-center gap-4 mb-12">
-            <span
-              className="font-mono uppercase tracking-[0.38em]"
-              style={{ fontSize: 10, color: "rgba(0,212,255,0.55)" }}
-            >
-              05
-            </span>
-            <div className="w-px h-4" style={{ background: "rgba(0,212,255,0.25)" }} />
-            <h3
-              className="font-display font-bold uppercase"
-              style={{ fontSize: "clamp(1.4rem,3.5vw,2.6rem)", letterSpacing: "-0.02em", color: "#e5e5e5" }}
-            >
-              Beyond the Code
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            {[
-              {
-                label: "Chess",
-                icon: "mdi:chess-knight",
-                desc: "Tactical thinking & pattern recognition",
-                color: "#00ff88",
-              },
-              {
-                label: "Workout",
-                icon: "lucide:dumbbell",
-                desc: "Discipline that bleeds into the craft",
-                color: "#00d4ff",
-              },
-              {
-                label: "Reading",
-                icon: "lucide:book-open",
-                desc: "Books that sharpen perspective",
-                color: "#b77bff",
-              },
-              {
-                label: "Sports",
-                icon: "lucide:activity",
-                desc: "Team play & competitive edge",
-                color: "#ffcc44",
-              },
-            ].map((hobby) => (
-              <div
-                key={hobby.label}
-                className="achieve-item group relative overflow-hidden rounded-2xl p-5 sm:p-6 flex flex-col gap-4 transition-all duration-500"
+          {achievements.map((ach, i) => {
+            const accent   = ["#00ff88","#00d4ff","#b77bff","#ffcc44","#00ff88"][i % 5];
+            const iconList = ["lucide:code-2","lucide:award","lucide:brain","lucide:zap","lucide:shield-check"];
+            return (
+              <div key={i}
+                className="ach-row group relative flex items-center"
                 style={{
+                  gap: "clamp(1rem,2.5vw,2.5rem)",
+                  padding: "clamp(1.1rem,2.5vh,1.5rem) 0",
+                  borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  cursor: "default",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.paddingLeft = "8px";
+                  e.currentTarget.querySelector(".ach-bg").style.opacity    = "1";
+                  e.currentTarget.querySelector(".ach-icon").style.transform = "scale(1.15)";
+                  e.currentTarget.querySelector(".ach-dot").style.opacity   = "1";
+                  e.currentTarget.querySelector(".ach-dot").style.transform = "scale(1)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.paddingLeft = "0";
+                  e.currentTarget.querySelector(".ach-bg").style.opacity    = "0";
+                  e.currentTarget.querySelector(".ach-icon").style.transform = "scale(1)";
+                  e.currentTarget.querySelector(".ach-dot").style.opacity   = "0";
+                  e.currentTarget.querySelector(".ach-dot").style.transform = "scale(0.6)";
+                }}
+              >
+                <div className="ach-bg absolute inset-0 pointer-events-none"
+                  style={{ background: `linear-gradient(to right,${accent}07,transparent 55%)`, opacity: 0 }} />
+
+                <span className="font-mono tabular-nums flex-shrink-0 w-7 text-right"
+                  style={{ fontSize: 11, color: "rgba(255,255,255,0.14)", letterSpacing: "0.1em" }}>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+
+                <div className="ach-icon flex-shrink-0 flex items-center justify-center"
+                  style={{ width: 34, height: 34, borderRadius: 10,
+                    background: `${accent}10`, border: `1px solid ${accent}20` }}>
+                  <Icon icon={iconList[i % iconList.length]} style={{ color: accent, width: 14, height: 14 }} />
+                </div>
+
+                <p className="flex-1"
+                  style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400, fontSize: "clamp(0.78rem,1.4vw,0.88rem)", lineHeight: 1.6, color: "rgba(229,229,229,0.52)", margin: 0 }}>
+                  {ach}
+                </p>
+
+                <div className="ach-dot flex-shrink-0"
+                  style={{ width: 6, height: 6, borderRadius: "50%",
+                    background: accent, boxShadow: `0 0 8px ${accent}`,
+                    opacity: 0, transform: "scale(0.6)" }} />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ════════════════════════════════
+            04  HOBBIES
+        ════════════════════════════════ */}
+        <div className="relative z-10 px-[5.5vw] pb-[16vh]">
+          <SectionHeader num="05" title="Beyond the Code" />
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: "Chess",   icon: "mdi:chess-knight", desc: "Tactical thinking & pattern recognition", color: "#00ff88" },
+              { label: "Workout", icon: "lucide:dumbbell",  desc: "Discipline that bleeds into the craft",   color: "#00d4ff" },
+              { label: "Reading", icon: "lucide:book-open", desc: "Books that sharpen perspective",          color: "#b77bff" },
+              { label: "Sports",  icon: "lucide:activity",  desc: "Team play & competitive edge",            color: "#ffcc44" },
+            ].map(h => (
+              <div key={h.label}
+                className="hobby-card group relative overflow-hidden rounded-2xl flex flex-col"
+                style={{
+                  padding: "clamp(1.2rem,2.5vw,1.6rem)",
+                  gap: "clamp(0.9rem,2vh,1.4rem)",
                   background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                  cursor: "default",
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `${hobby.color}0a`;
-                  e.currentTarget.style.borderColor = `${hobby.color}30`;
-                  e.currentTarget.style.transform   = "translateY(-4px)";
-                  e.currentTarget.style.boxShadow   = `0 24px 48px ${hobby.color}10`;
+                onMouseEnter={e => {
+                  e.currentTarget.style.background  = `${h.color}08`;
+                  e.currentTarget.style.borderColor = `${h.color}26`;
+                  e.currentTarget.style.transform   = "translateY(-5px)";
+                  e.currentTarget.style.boxShadow   = `0 24px 48px ${h.color}0e`;
+                  e.currentTarget.querySelector(".hob-bar").style.width    = "100%";
+                  e.currentTarget.querySelector(".hob-glow").style.opacity = "1";
+                  e.currentTarget.querySelector(".hob-icon").style.transform = "scale(1.1) rotate(-3deg)";
                 }}
-                onMouseLeave={(e) => {
+                onMouseLeave={e => {
                   e.currentTarget.style.background  = "rgba(255,255,255,0.02)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)";
                   e.currentTarget.style.transform   = "translateY(0)";
                   e.currentTarget.style.boxShadow   = "none";
+                  e.currentTarget.querySelector(".hob-bar").style.width    = "0%";
+                  e.currentTarget.querySelector(".hob-glow").style.opacity = "0";
+                  e.currentTarget.querySelector(".hob-icon").style.transform = "scale(1) rotate(0deg)";
                 }}
               >
-                {/* Top: icon */}
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 flex-shrink-0"
-                  style={{ background: `${hobby.color}15`, border: `1px solid ${hobby.color}28` }}
-                >
-                  <Icon icon={hobby.icon} style={{ color: hobby.color, width: 18, height: 18 }} />
+                <div className="hob-icon flex-shrink-0 flex items-center justify-center"
+                  style={{ width: 44, height: 44, borderRadius: 12,
+                    background: `${h.color}12`, border: `1px solid ${h.color}22` }}>
+                  <Icon icon={h.icon} style={{ color: h.color, width: 20, height: 20 }} />
                 </div>
 
-                {/* Label */}
                 <div>
-                  <p
-                    className="font-display font-bold uppercase mb-1 transition-colors duration-300"
-                    style={{ fontSize: "clamp(0.9rem,1.8vw,1.05rem)", letterSpacing: "-0.01em", color: "#e5e5e5" }}
-                  >
-                    {hobby.label}
+                  <p className="font-display font-bold uppercase mb-1"
+                    style={{ fontSize: "clamp(0.9rem,1.8vw,1.05rem)", color: "#e5e5e5", letterSpacing: "-0.01em" }}>
+                    {h.label}
                   </p>
-                  <p
-                    className="font-mono leading-relaxed"
-                    style={{ fontSize: "clamp(0.68rem,1.2vw,0.75rem)", color: "rgba(229,229,229,0.38)" }}
-                  >
-                    {hobby.desc}
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300, fontSize: "clamp(0.67rem,1.1vw,0.75rem)", lineHeight: 1.65, color: "rgba(229,229,229,0.38)" }}>
+                    {h.desc}
                   </p>
                 </div>
 
-                {/* Bottom accent line */}
-                <div
-                  className="absolute bottom-0 left-0 h-[1.5px] w-0 group-hover:w-full transition-all duration-600"
-                  style={{ background: `linear-gradient(to right, ${hobby.color}80, transparent)` }}
-                />
+                <div className="hob-bar absolute bottom-0 left-0 h-[1.5px]"
+                  style={{ width: "0%", background: `linear-gradient(to right,${h.color}65,transparent)` }} />
 
-                {/* Subtle corner glow */}
-                <div
-                  className="absolute top-0 right-0 w-16 h-16 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle at top right, ${hobby.color}15, transparent 70%)`,
-                  }}
-                />
+                <div className="hob-glow absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none"
+                  style={{ background: `radial-gradient(circle,${h.color}16,transparent 70%)`, opacity: 0 }} />
               </div>
             ))}
           </div>
         </div>
-
-      </div>
-
-      {/* GSAP CSS var support */}
-      <style>{`
-        [ref="maskLayerRef"] { transition: none; }
-      `}</style>
-    </section>
+      </section>
+    </>
   );
-};
-
-export default About;
+}
