@@ -516,9 +516,9 @@ const Hero = () => {
               </span>
               <div className="h-px w-8 bg-border/30 flex-shrink-0" />
               {[
-                { icon: "simple-icons:github",   href: "https://github.com",   label: "GitHub" },
-                { icon: "simple-icons:linkedin",  href: "https://linkedin.com", label: "LinkedIn" },
-                { icon: "simple-icons:x",         href: "https://x.com",        label: "X / Twitter" },
+                { icon: "simple-icons:github",   href: "https://github.com/anshu-c8NETed",   label: "GitHub" },
+                { icon: "simple-icons:linkedin",  href: "https://www.linkedin.com/in/anshu-raj-tech/", label: "LinkedIn" },
+                { icon: "simple-icons:x",         href: "https://x.com/raj_anshu2123", label: "X / Twitter" },
               ].map(({ icon, href, label }) => (
                 <a
                   key={label}
