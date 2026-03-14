@@ -195,18 +195,18 @@ export default function About() {
             });
           });
 
-          // Assemble on scroll — quick but smooth
+          // Assemble on scroll — staggered per char with golden-angle ordering
           const tl = gsap.timeline({
             scrollTrigger: {
               trigger : el,
-              start   : "top 88%",
-              end     : "top 42%",
-              scrub   : 0.8,
+              start   : "top 85%",
+              end     : "top 30%",
+              scrub   : 1.4,
             },
           });
 
           split.chars.forEach((ch, i) => {
-            const progress = (i / total) * 0.85;
+            const progress = (i / total) * 0.7 + Math.random() * 0.08;
             tl.to(ch, {
               left     : positions[i].left,
               top      : positions[i].top,
@@ -214,8 +214,7 @@ export default function About() {
               scale    : 1,
               rotation : 0,
               color    : "rgba(229,229,229,0.55)",
-              ease     : "power2.out",
-              duration : 0.4,
+              ease     : "expo.out",
             }, progress);
           });
 
@@ -283,89 +282,6 @@ export default function About() {
         .bio-char {
           display: inline-block;
           will-change: transform, left, top, opacity;
-        }
-
-        /* ── bio paragraph block (code-editor aesthetic) ── */
-        .bio-para-block {
-          position: relative;
-          border: 1px solid rgba(0,255,136,0.1);
-          border-radius: 6px;
-          overflow: hidden;
-          background: rgba(0,255,136,0.02);
-        }
-        .bio-para-block::before {
-          content: '';
-          position: absolute;
-          top: 0; left: 0;
-          width: 2px; height: 100%;
-          background: linear-gradient(to bottom, #00ff88 0%, #00d4ff 50%, transparent 100%);
-          opacity: 0.5;
-        }
-        .bio-para-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 8px 14px;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
-          background: rgba(255,255,255,0.02);
-        }
-        .bio-para-label {
-          font-family: var(--font-mono);
-          font-size: 10px;
-          letter-spacing: 0.14em;
-          color: rgba(0,255,136,0.45);
-        }
-        .bio-para-dots {
-          display: flex;
-          gap: 5px;
-        }
-        .bio-para-dots span {
-          display: block;
-          width: 7px; height: 7px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.08);
-        }
-        .bio-para-body {
-          display: flex;
-          gap: 0;
-          padding: 18px 0 18px 0;
-        }
-        .bio-para-gutter {
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-          padding: 0 14px;
-          border-right: 1px solid rgba(255,255,255,0.05);
-          min-width: 42px;
-          text-align: right;
-          flex-shrink: 0;
-        }
-        .bio-para-gutter span {
-          font-family: var(--font-mono);
-          font-size: 11px;
-          line-height: 1.85;
-          color: rgba(255,255,255,0.1);
-          user-select: none;
-        }
-        .bio-para-text {
-          padding: 0 18px;
-          flex: 1;
-          overflow: hidden;
-        }
-        .bio-para-footer {
-          display: flex;
-          align-items: center;
-          gap: 18px;
-          padding: 7px 14px;
-          border-top: 1px solid rgba(255,255,255,0.05);
-          background: rgba(255,255,255,0.02);
-        }
-        .bio-para-footer span {
-          font-family: var(--font-mono);
-          font-size: 9px;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: rgba(255,255,255,0.18);
         }
 
         @media (max-width: 639px) {
@@ -534,62 +450,36 @@ export default function About() {
 
               <div className="bio-item about-underline h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
 
-              {/* ── bio paragraphs — scatter/assemble on scroll ── */}
-              <div className="bio-item bio-para-block">
-
-                {/* top label bar */}
-                <div className="bio-para-header">
-                  <span className="bio-para-label">// bio.txt</span>
-                  <span className="bio-para-dots">
-                    <span /><span /><span />
-                  </span>
-                </div>
-
-                {/* line-number gutter + text */}
-                <div className="bio-para-body">
-                  <div className="bio-para-gutter" aria-hidden="true">
-                    {["01","02","03","04","05","06","07","08"].map(n => (
-                      <span key={n}>{n}</span>
-                    ))}
-                  </div>
-                  <div className="bio-para-text">
-                    <p
-                      ref={bioPara1}
-                      style={{
-                        fontFamily: "'Inter', sans-serif", fontWeight: 300,
-                        fontSize: "clamp(13px,1.3vw,15px)", lineHeight: 1.85,
-                        color: "rgba(229,229,229,0.55)", letterSpacing: "0.01em",
-                        minHeight: "4.5em",
-                        position: "relative",
-                      }}
-                    >
-                      I'm Anshu Raj — a full-stack developer with a compulsion for interfaces
-                      that feel alive. Every transition is earned, every shader intentional.
-                    </p>
-                    <p
-                      ref={bioPara2}
-                      style={{
-                        fontFamily: "'Inter', sans-serif", fontWeight: 300,
-                        fontSize: "clamp(13px,1.3vw,15px)", lineHeight: 1.85,
-                        color: "rgba(229,229,229,0.55)", letterSpacing: "0.01em",
-                        marginTop: 14,
-                        minHeight: "4.5em",
-                        position: "relative",
-                      }}
-                    >
-                      From WebGL particle systems to real-time Socket.io collaboration, I work
-                      across creative front-end and backend architecture — balancing visual
-                      design with technical reliability.
-                    </p>
-                  </div>
-                </div>
-
-                {/* bottom status bar */}
-                <div className="bio-para-footer">
-                  <span>UTF-8</span>
-                  <span>LN 1–8</span>
-                  <span style={{ color: "#00ff88" }}>● live</span>
-                </div>
+              {/* ── bio paragraphs — get the scatter/assemble treatment ── */}
+              <div className="bio-item" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <p
+                  ref={bioPara1}
+                  style={{
+                    fontFamily: "'Inter', sans-serif", fontWeight: 300,
+                    fontSize: "clamp(13px,1.3vw,15px)", lineHeight: 1.85,
+                    color: "rgba(229,229,229,0.55)", letterSpacing: "0.01em",
+                    maxWidth: 480,
+                    // needs a known height so absolute children stay inside
+                    minHeight: "4.5em",
+                  }}
+                >
+                  I'm Anshu Raj — a full-stack developer with a compulsion for interfaces
+                  that feel alive. Every transition is earned, every shader intentional.
+                </p>
+                <p
+                  ref={bioPara2}
+                  style={{
+                    fontFamily: "'Inter', sans-serif", fontWeight: 300,
+                    fontSize: "clamp(13px,1.3vw,15px)", lineHeight: 1.85,
+                    color: "rgba(229,229,229,0.55)", letterSpacing: "0.01em",
+                    maxWidth: 480,
+                    minHeight: "4.5em",
+                  }}
+                >
+                  From WebGL particle systems to real-time Socket.io collaboration, I work
+                  across creative front-end and backend architecture — balancing visual
+                  design with technical reliability.
+                </p>
               </div>
 
               <div className="bio-item" style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
