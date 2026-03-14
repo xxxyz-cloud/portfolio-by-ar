@@ -1,19 +1,11 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { SplitText, ScrollTrigger } from "gsap/all";
+import { ScrollTrigger } from "gsap/all";
 import { achievements } from "../constants";
 import { Icon } from "@iconify/react/dist/iconify.js";
 
-gsap.registerPlugin(SplitText, ScrollTrigger);
-
-// golden-angle spread used to scatter chars outward
-function goldenAnglePos(i, total, rMin, rMax) {
-  const phi   = Math.PI * (3 - Math.sqrt(5));
-  const angle = i * phi;
-  const r     = rMin + (rMax - rMin) * Math.sqrt(i / total);
-  return { x: Math.cos(angle) * r, y: Math.sin(angle) * r * 0.55 };
-}
+gsap.registerPlugin(ScrollTrigger);
 
 export default function About() {
   const sectionRef = useRef(null);
@@ -24,13 +16,11 @@ export default function About() {
   const line1 = useRef(null); const line2 = useRef(null);
   const line3 = useRef(null); const line4 = useRef(null);
   const line5 = useRef(null);
-  const bioRef    = useRef(null);
-  const achRef    = useRef(null);
-  const bioPara1  = useRef(null); // ← bio paragraph refs
-  const bioPara2  = useRef(null);
+  const bioRef = useRef(null);
+  const achRef = useRef(null);
 
   /* ── Shery imageEffect ── */
-  useGSAP(() => {
+  useEffect(() => {
     if (sheryDone.current) return;
     const boot = () => {
       if (!window.Shery) { setTimeout(boot, 120); return; }
@@ -99,7 +89,6 @@ export default function About() {
   useGSAP(() => {
     const ctx = gsap.context(() => {
 
-      // headline word reveals
       [line1, line2, line3, line4, line5].forEach(line => {
         const words = line.current?.querySelectorAll(".w");
         if (words?.length) {
@@ -110,7 +99,6 @@ export default function About() {
         }
       });
 
-      // pill expand
       [
         { pill: pill1, line: line1 }, { pill: pill2, line: line2 },
         { pill: pill3, line: line3 }, { pill: pill4, line: line5 },
@@ -124,7 +112,6 @@ export default function About() {
         });
       });
 
-      // bio items (heading, tags, links — NOT the paragraphs, those get scatter below)
       if (bioRef.current) {
         gsap.from(bioRef.current.querySelectorAll(".bio-item"), {
           y: 40, opacity: 0, stagger: 0.1, duration: 0.9, ease: "power3.out",
@@ -132,7 +119,6 @@ export default function About() {
         });
       }
 
-      // achievement rows
       if (achRef.current) {
         gsap.from(achRef.current.querySelectorAll(".ach-row"), {
           x: -32, opacity: 0, stagger: 0.06, duration: 0.7, ease: "power2.out",
@@ -140,7 +126,6 @@ export default function About() {
         });
       }
 
-      // underlines
       gsap.utils.toArray(".about-underline").forEach(el => {
         gsap.from(el, {
           scaleX: 0, transformOrigin: "left", duration: 1.2, ease: "expo.out",
@@ -148,7 +133,6 @@ export default function About() {
         });
       });
 
-      // section scale-out
       gsap.to(sectionRef.current, {
         scale: 0.96, opacity: 0.8,
         scrollTrigger: {
@@ -156,73 +140,6 @@ export default function About() {
           start: "bottom 75%", end: "bottom 15%", scrub: true,
         },
       });
-
-      // ── BIO PARAGRAPH SCATTER → ASSEMBLE ─────────────────────────────────
-      // Wait for fonts so SplitText gets correct glyph metrics
-      document.fonts.ready.then(() => {
-        [bioPara1, bioPara2].forEach((paraRef, pi) => {
-          const el = paraRef.current;
-          if (!el) return;
-
-          // Make the paragraph a relative container so offsetLeft/Top are local
-          el.style.position = "relative";
-
-          const split = new SplitText(el, { type: "chars", charsClass: "bio-char" });
-          const total = split.chars.length;
-
-          // Snapshot where each char should land (assembled position)
-          const positions = split.chars.map(ch => ({
-            left: ch.offsetLeft,
-            top:  ch.offsetTop,
-          }));
-
-          const elRect  = el.getBoundingClientRect();
-          const centerX = elRect.width  * 0.5;
-          const centerY = elRect.height * 0.5;
-          const rMax    = Math.min(elRect.width, elRect.height * 4) * 0.38;
-
-          // Scatter chars to golden-angle radial positions
-          split.chars.forEach((ch, i) => {
-            const { x: dx, y: dy } = goldenAnglePos(i, total, 40, rMax);
-            gsap.set(ch, {
-              position : "absolute",
-              left     : centerX + dx,
-              top      : centerY + dy,
-              opacity  : 0,
-              scale    : 0.6 + Math.random() * 0.6,
-              rotation : (Math.random() - 0.5) * 40,
-              color    : `hsl(152,${20 + Math.random() * 25}%,${40 + Math.random() * 20}%)`,
-            });
-          });
-
-          // Assemble on scroll — staggered per char with golden-angle ordering
-          const tl = gsap.timeline({
-            scrollTrigger: {
-              trigger : el,
-              start   : "top 85%",
-              end     : "top 30%",
-              scrub   : 1.4,
-            },
-          });
-
-          split.chars.forEach((ch, i) => {
-            const progress = (i / total) * 0.7 + Math.random() * 0.08;
-            tl.to(ch, {
-              left     : positions[i].left,
-              top      : positions[i].top,
-              opacity  : 1,
-              scale    : 1,
-              rotation : 0,
-              color    : "rgba(229,229,229,0.55)",
-              ease     : "expo.out",
-            }, progress);
-          });
-
-          // Small stagger delay between the two paragraphs
-          if (pi === 1) ScrollTrigger.refresh();
-        });
-      });
-      // ─────────────────────────────────────────────────────────────────────
 
     }, sectionRef);
     return () => ctx.revert();
@@ -247,9 +164,13 @@ export default function About() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
 
-        .ab-pill img { transition: transform 0.55s cubic-bezier(0.16,1,0.3,1); }
+        /* ── pill image zoom ── */
+        .ab-pill img {
+          transition: transform 0.55s cubic-bezier(0.16,1,0.3,1);
+        }
         .ab-pill:hover img { transform: translateX(-50%) scale(1.07); }
 
+        /* ── bio tag ── */
         .bio-tag {
           display: inline-block;
           font-family: var(--font-mono);
@@ -259,30 +180,38 @@ export default function About() {
           padding: 5px 12px;
           border-radius: 2px;
           cursor: default;
-          transition: background 0.2s ease, border-color 0.2s ease,
-                      color 0.2s ease, transform 0.22s cubic-bezier(0.16,1,0.3,1);
+          transition:
+            background 0.2s ease,
+            border-color 0.2s ease,
+            color 0.2s ease,
+            transform 0.22s cubic-bezier(0.16,1,0.3,1);
         }
         .bio-tag:hover { transform: translateY(-2px); }
 
-        .ach-row  { transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1); }
-        .ach-bg   { transition: opacity 0.25s ease; }
+        /* ── ach row ── */
+        .ach-row {
+          transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+
+        /* ── ach internals ── */
+        .ach-bg  { transition: opacity 0.25s ease; }
         .ach-icon { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
         .ach-dot  { transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+
+        /* ── cta line ── */
         .cta-line { transition: width 0.35s cubic-bezier(0.16,1,0.3,1); }
 
+        /* ── hobby card ── */
         .hobby-card {
-          transition: transform 0.35s cubic-bezier(0.16,1,0.3,1),
-                      background 0.25s ease, border-color 0.25s ease, box-shadow 0.35s ease;
+          transition:
+            transform 0.35s cubic-bezier(0.16,1,0.3,1),
+            background 0.25s ease,
+            border-color 0.25s ease,
+            box-shadow 0.35s ease;
         }
         .hob-icon { transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1); }
         .hob-bar  { transition: width 0.4s cubic-bezier(0.16,1,0.3,1); }
         .hob-glow { transition: opacity 0.35s ease; }
-
-        /* bio char — takes absolute positioning from GSAP */
-        .bio-char {
-          display: inline-block;
-          will-change: transform, left, top, opacity;
-        }
 
         @media (max-width: 639px) {
           .ab-pill { display: none !important; }
@@ -450,32 +379,12 @@ export default function About() {
 
               <div className="bio-item about-underline h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
 
-              {/* ── bio paragraphs — get the scatter/assemble treatment ── */}
               <div className="bio-item" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <p
-                  ref={bioPara1}
-                  style={{
-                    fontFamily: "'Inter', sans-serif", fontWeight: 300,
-                    fontSize: "clamp(13px,1.3vw,15px)", lineHeight: 1.85,
-                    color: "rgba(229,229,229,0.55)", letterSpacing: "0.01em",
-                    maxWidth: 480,
-                    // needs a known height so absolute children stay inside
-                    minHeight: "4.5em",
-                  }}
-                >
+                <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300, fontSize: "clamp(13px,1.3vw,15px)", lineHeight: 1.85, color: "rgba(229,229,229,0.55)", letterSpacing: "0.01em", maxWidth: 480 }}>
                   I'm Anshu Raj — a full-stack developer with a compulsion for interfaces
                   that feel alive. Every transition is earned, every shader intentional.
                 </p>
-                <p
-                  ref={bioPara2}
-                  style={{
-                    fontFamily: "'Inter', sans-serif", fontWeight: 300,
-                    fontSize: "clamp(13px,1.3vw,15px)", lineHeight: 1.85,
-                    color: "rgba(229,229,229,0.55)", letterSpacing: "0.01em",
-                    maxWidth: 480,
-                    minHeight: "4.5em",
-                  }}
-                >
+                <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300, fontSize: "clamp(13px,1.3vw,15px)", lineHeight: 1.85, color: "rgba(229,229,229,0.55)", letterSpacing: "0.01em", maxWidth: 480 }}>
                   From WebGL particle systems to real-time Socket.io collaboration, I work
                   across creative front-end and backend architecture — balancing visual
                   design with technical reliability.
@@ -561,34 +470,38 @@ export default function About() {
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.paddingLeft = "8px";
-                  e.currentTarget.querySelector(".ach-bg").style.opacity     = "1";
+                  e.currentTarget.querySelector(".ach-bg").style.opacity    = "1";
                   e.currentTarget.querySelector(".ach-icon").style.transform = "scale(1.15)";
-                  e.currentTarget.querySelector(".ach-dot").style.opacity    = "1";
-                  e.currentTarget.querySelector(".ach-dot").style.transform  = "scale(1)";
+                  e.currentTarget.querySelector(".ach-dot").style.opacity   = "1";
+                  e.currentTarget.querySelector(".ach-dot").style.transform = "scale(1)";
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.paddingLeft = "0";
-                  e.currentTarget.querySelector(".ach-bg").style.opacity     = "0";
+                  e.currentTarget.querySelector(".ach-bg").style.opacity    = "0";
                   e.currentTarget.querySelector(".ach-icon").style.transform = "scale(1)";
-                  e.currentTarget.querySelector(".ach-dot").style.opacity    = "0";
-                  e.currentTarget.querySelector(".ach-dot").style.transform  = "scale(0.6)";
+                  e.currentTarget.querySelector(".ach-dot").style.opacity   = "0";
+                  e.currentTarget.querySelector(".ach-dot").style.transform = "scale(0.6)";
                 }}
               >
                 <div className="ach-bg absolute inset-0 pointer-events-none"
                   style={{ background: `linear-gradient(to right,${accent}07,transparent 55%)`, opacity: 0 }} />
+
                 <span className="font-mono tabular-nums flex-shrink-0 w-7 text-right"
                   style={{ fontSize: 11, color: "rgba(255,255,255,0.14)", letterSpacing: "0.1em" }}>
                   {String(i + 1).padStart(2, "0")}
                 </span>
+
                 <div className="ach-icon flex-shrink-0 flex items-center justify-center"
                   style={{ width: 34, height: 34, borderRadius: 10,
                     background: `${accent}10`, border: `1px solid ${accent}20` }}>
                   <Icon icon={iconList[i % iconList.length]} style={{ color: accent, width: 14, height: 14 }} />
                 </div>
+
                 <p className="flex-1"
                   style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400, fontSize: "clamp(0.78rem,1.4vw,0.88rem)", lineHeight: 1.6, color: "rgba(229,229,229,0.52)", margin: 0 }}>
                   {ach}
                 </p>
+
                 <div className="ach-dot flex-shrink-0"
                   style={{ width: 6, height: 6, borderRadius: "50%",
                     background: accent, boxShadow: `0 0 8px ${accent}`,
@@ -625,8 +538,8 @@ export default function About() {
                   e.currentTarget.style.borderColor = `${h.color}26`;
                   e.currentTarget.style.transform   = "translateY(-5px)";
                   e.currentTarget.style.boxShadow   = `0 24px 48px ${h.color}0e`;
-                  e.currentTarget.querySelector(".hob-bar").style.width      = "100%";
-                  e.currentTarget.querySelector(".hob-glow").style.opacity   = "1";
+                  e.currentTarget.querySelector(".hob-bar").style.width    = "100%";
+                  e.currentTarget.querySelector(".hob-glow").style.opacity = "1";
                   e.currentTarget.querySelector(".hob-icon").style.transform = "scale(1.1) rotate(-3deg)";
                 }}
                 onMouseLeave={e => {
@@ -634,8 +547,8 @@ export default function About() {
                   e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)";
                   e.currentTarget.style.transform   = "translateY(0)";
                   e.currentTarget.style.boxShadow   = "none";
-                  e.currentTarget.querySelector(".hob-bar").style.width      = "0%";
-                  e.currentTarget.querySelector(".hob-glow").style.opacity   = "0";
+                  e.currentTarget.querySelector(".hob-bar").style.width    = "0%";
+                  e.currentTarget.querySelector(".hob-glow").style.opacity = "0";
                   e.currentTarget.querySelector(".hob-icon").style.transform = "scale(1) rotate(0deg)";
                 }}
               >
@@ -644,6 +557,7 @@ export default function About() {
                     background: `${h.color}12`, border: `1px solid ${h.color}22` }}>
                   <Icon icon={h.icon} style={{ color: h.color, width: 20, height: 20 }} />
                 </div>
+
                 <div>
                   <p className="font-display font-bold uppercase mb-1"
                     style={{ fontSize: "clamp(0.9rem,1.8vw,1.05rem)", color: "#e5e5e5", letterSpacing: "-0.01em" }}>
@@ -653,8 +567,10 @@ export default function About() {
                     {h.desc}
                   </p>
                 </div>
+
                 <div className="hob-bar absolute bottom-0 left-0 h-[1.5px]"
                   style={{ width: "0%", background: `linear-gradient(to right,${h.color}65,transparent)` }} />
+
                 <div className="hob-glow absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none"
                   style={{ background: `radial-gradient(circle,${h.color}16,transparent 70%)`, opacity: 0 }} />
               </div>
