@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -14,6 +14,11 @@ const SERVICES = [
     subtitle: "MERN · REST · GraphQL",
     color: "#00ff88",
     desc: "End-to-end architecture from MongoDB schemas to polished React UIs. I design APIs that scale, data models that breathe, and interfaces that respond in milliseconds.",
+    items: [
+      { title: "Real-Time Applications", description: "Socket.io, WebSockets, Live Collaboration" },
+      { title: "Modern Frontend",        description: "React, Next.js, TypeScript, Server Components" },
+      { title: "Robust Backend",         description: "Node.js, Express, REST APIs, MongoDB" },
+    ],
     tags: ["React", "Node.js", "MongoDB", "Express", "REST APIs"],
     metric: { value: "10+", label: "Shipped Products" },
     image: "/assets/services/fullstack.jpg",
@@ -24,6 +29,11 @@ const SERVICES = [
     subtitle: "Three.js · GSAP · WebGL",
     color: "#00d4ff",
     desc: "Scenes that breathe. Interfaces that feel alive. From WebGL shaders to choreographed scroll narratives — motion is the medium, sensation is the goal.",
+    items: [
+      { title: "3D Web Graphics",        description: "Three.js, React Three Fiber, WebGL Shaders" },
+      { title: "Advanced Animations",    description: "GSAP, ScrollTrigger, Framer Motion" },
+      { title: "Interactive Experiences",description: "Particle Systems, Procedural Generation, GPU Effects" },
+    ],
     tags: ["Three.js", "GSAP", "WebGL", "Framer Motion", "Lenis"],
     metric: { value: "60fps", label: "On Mobile Devices" },
     image: "/assets/services/animation.jpg",
@@ -34,6 +44,11 @@ const SERVICES = [
     subtitle: "Gemini · LangChain · Embeddings",
     color: "#b77bff",
     desc: "Weaving intelligence into product surfaces. RAG pipelines, semantic search, generative UI — AI features that feel native, not bolted on.",
+    items: [
+      { title: "AI-Powered Features",    description: "Google Gemini API, Code Generation, Smart Assistance" },
+      { title: "Data Analytics",         description: "GenAI Analytics, Predictive Modeling, Risk Assessment" },
+      { title: "Intelligent Systems",    description: "Rate Limiting, Retry Logic, Error Handling" },
+    ],
     tags: ["Google Gemini", "LangChain", "OpenAI", "Vector DBs", "Streaming"],
     metric: { value: "∞", label: "Possible Contexts" },
     image: "/assets/services/ai.jpg",
@@ -44,6 +59,11 @@ const SERVICES = [
     subtitle: "Socket.io · WebSockets · CRDTs",
     color: "#00ff88",
     desc: "Building collaboration tools that feel like magic. Sub-50ms event propagation, conflict-free shared state, live cursors and presence — the web feels local.",
+    items: [
+      { title: "Data Structures",        description: "Arrays, Trees, Graphs, Dynamic Programming" },
+      { title: "System Design",          description: "Scalability, Performance, Architecture Patterns" },
+      { title: "Code Quality",           description: "Clean Code, Testing, Documentation, Best Practices" },
+    ],
     tags: ["Socket.io", "WebSockets", "Redis", "CRDTs", "EventEmitter"],
     metric: { value: "<50ms", label: "Event Latency" },
     image: "/assets/services/performance.jpg",
@@ -276,293 +296,335 @@ const DesktopFilmstrip = () => {
   );
 };
 
-// ── Mobile: single-column full-width flip cards ───────────────────
+// ── Mobile: accordion stack with GSAP entrance ────────────────────
 const MobileGrid = () => {
-  return (
-    <div style={{ padding: "1.5rem 1.1rem 4rem", position: "relative" }}>
+  const [openIdx, setOpenIdx]   = useState(null);
+  const wrapRef                 = useRef(null);
 
-      {/* Header row */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 10,
-        marginBottom: "1.75rem",
-      }}>
+  // Stagger cards in on scroll
+  useGSAP(() => {
+    if (!wrapRef.current) return;
+    const cards = wrapRef.current.querySelectorAll("[data-mob-card]");
+    gsap.from(cards, {
+      y: 60, opacity: 0,
+      stagger: 0.13,
+      duration: 0.75,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: wrapRef.current,
+        start: "top 88%",
+        once: true,
+      },
+    });
+    // Hint label
+    const hint = wrapRef.current.querySelector("[data-mob-hint]");
+    if (hint) {
+      gsap.from(hint, {
+        opacity: 0, x: -16, duration: 0.6, ease: "power2.out",
+        scrollTrigger: { trigger: wrapRef.current, start: "top 90%", once: true },
+      });
+    }
+  }, []);
+
+  const toggle = (i) => setOpenIdx((prev) => (prev === i ? null : i));
+
+  return (
+    <div style={{ padding: "1.5rem 1rem 4rem" }} ref={wrapRef}>
+      {/* Hint */}
+      <div data-mob-hint style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "1.75rem" }}>
         <span style={{
           fontFamily: "var(--font-mono)", fontSize: 9,
           color: "rgba(255,255,255,0.22)", letterSpacing: "0.35em",
           textTransform: "uppercase", whiteSpace: "nowrap",
-        }}>tap to reveal</span>
-        <div style={{
-          flex: 1, height: 1,
-          background: "linear-gradient(to right, rgba(255,255,255,0.07), transparent)",
-        }} />
+        }}>tap to explore</span>
+        <div style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(255,255,255,0.07), transparent)" }} />
       </div>
 
-      {/* Single column stack */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {SERVICES.map((service, i) => (
-          <MobileFlipCard key={i} service={service} index={i} />
+          <MobileAccordionCard
+            key={i}
+            service={service}
+            isOpen={openIdx === i}
+            onToggle={() => toggle(i)}
+          />
         ))}
       </div>
     </div>
   );
 };
 
-// ── MobileFlipCard: full-width, content-height, tap to flip ──────
-const MobileFlipCard = ({ service }) => {
-  const [flipped, setFlipped] = useState(false);
-  // Fixed height so front/back are same size
-  const CARD_H = 220;
+// ── MobileAccordionCard ───────────────────────────────────────────
+const MobileAccordionCard = ({ service, isOpen, onToggle }) => {
+  const bodyRef    = useRef(null);
+  const itemsRef   = useRef(null);
+  const wasOpen    = useRef(false);
+
+  // Animate body items in when opening
+  useEffect(() => {
+    if (isOpen && !wasOpen.current && itemsRef.current) {
+      const els = itemsRef.current.querySelectorAll("[data-anim-item]");
+      gsap.from(els, {
+        y: 18, opacity: 0,
+        stagger: 0.07,
+        duration: 0.5,
+        ease: "power2.out",
+        delay: 0.15,
+      });
+    }
+    wasOpen.current = isOpen;
+  }, [isOpen]);
 
   return (
     <div
-      onClick={() => setFlipped((f) => !f)}
+      data-mob-card
       style={{
-        position: "relative",
-        width: "100%",
-        height: CARD_H,
-        perspective: "1000px",
-        cursor: "pointer",
-        WebkitTapHighlightColor: "transparent",
-        userSelect: "none",
+        borderRadius: 16,
+        overflow: "hidden",
+        border: `1px solid ${isOpen ? service.color + "40" : "rgba(255,255,255,0.08)"}`,
+        transition: "border-color 0.4s ease",
+        willChange: "transform",
       }}
     >
-      <div style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        transformStyle: "preserve-3d",
-        transition: "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)",
-        transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        borderRadius: 16,
-      }}>
+      {/* ── Image header (always visible) ── */}
+      <div
+        onClick={onToggle}
+        style={{
+          position: "relative",
+          height: isOpen ? 160 : 110,
+          overflow: "hidden",
+          cursor: "pointer",
+          WebkitTapHighlightColor: "transparent",
+          userSelect: "none",
+          transition: "height 0.45s cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
+        {/* Service image */}
+        <img
+          src={service.image}
+          alt={service.title}
+          style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
+            objectFit: "cover",
+            opacity: isOpen ? 0.55 : 0.35,
+            filter: `grayscale(${isOpen ? 0 : 30}%) brightness(${isOpen ? 1.05 : 0.85})`,
+            transform: isOpen ? "scale(1.04)" : "scale(1)",
+            transition: "opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease",
+          }}
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
+        />
 
-        {/* ── FRONT ── */}
+        {/* Dark gradient base */}
         <div style={{
           position: "absolute", inset: 0,
-          borderRadius: 16,
-          overflow: "hidden",
-          backfaceVisibility: "hidden",
-          WebkitBackfaceVisibility: "hidden",
-          border: `1px solid ${service.color}20`,
-        }}>
-          {/* Bg gradient */}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: `linear-gradient(135deg, #111 0%, ${service.color}15 100%)`,
-          }} />
+          background: isOpen
+            ? `linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.55) 100%)`
+            : `linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.6) 100%)`,
+          transition: "background 0.45s ease",
+        }} />
 
-          {/* Image */}
-          <img
-            src={service.image}
-            alt={service.title}
-            style={{
-              position: "absolute", inset: 0,
-              width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.45,
-              filter: "grayscale(10%)",
-            }}
-            onError={(e) => { e.currentTarget.style.display = "none"; }}
-          />
-
-          {/* Gradient overlay */}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: `linear-gradient(120deg, rgba(0,0,0,0.75) 40%, rgba(0,0,0,0.2) 100%)`,
-          }} />
-
-          {/* Top accent line */}
-          <div style={{
-            position: "absolute", top: 0, left: 0, right: 0, height: 2,
-            background: `linear-gradient(to right, ${service.color}, transparent 70%)`,
-          }} />
-
-          {/* Ghost number */}
-          <span style={{
-            position: "absolute", right: 18, bottom: 10,
-            fontFamily: "var(--font-display)", fontWeight: 800,
-            fontSize: "6rem", color: `${service.color}08`,
-            letterSpacing: "-0.06em", lineHeight: 1, userSelect: "none",
-          }}>{service.id}</span>
-
-          {/* Content */}
-          <div style={{
-            position: "absolute", inset: 0,
-            padding: "18px 20px",
-            display: "flex", flexDirection: "column", justifyContent: "space-between",
-          }}>
-            {/* Top row */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{
-                fontFamily: "var(--font-mono)", fontSize: 10,
-                color: `${service.color}cc`, letterSpacing: "0.35em",
-              }}>{service.id}</span>
-              {/* Tap chip */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: 5,
-                padding: "3px 9px", borderRadius: 100,
-                border: `1px solid ${service.color}30`,
-                background: `${service.color}08`,
-              }}>
-                <svg width="7" height="7" viewBox="0 0 10 10" fill="none">
-                  <circle cx="5" cy="5" r="4" stroke={service.color} strokeWidth="1.2" strokeOpacity="0.7"/>
-                  <path d="M5 3v4M3 5l2 2 2-2" stroke={service.color} strokeWidth="1" strokeOpacity="0.7" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span style={{
-                  fontFamily: "var(--font-mono)", fontSize: 8,
-                  color: `${service.color}99`, letterSpacing: "0.25em",
-                  textTransform: "uppercase",
-                }}>flip</span>
-              </div>
-            </div>
-
-            {/* Bottom text block */}
-            <div>
-              <p style={{
-                fontFamily: "var(--font-mono)", fontSize: 10,
-                color: `${service.color}80`, letterSpacing: "0.2em",
-                textTransform: "uppercase", margin: "0 0 6px",
-              }}>{service.subtitle}</p>
-              <h3 style={{
-                fontFamily: "var(--font-display)", fontWeight: 800,
-                fontSize: "1.65rem",
-                color: "#e8e8e8", letterSpacing: "-0.03em",
-                lineHeight: 1.05, margin: "0 0 10px",
-              }}>
-                {service.title.split("\n").map((line, li) => (
-                  <span key={li} style={{ display: "block" }}>
-                    {li === 1
-                      ? <em style={{ color: service.color, fontStyle: "italic" }}>{line}</em>
-                      : line}
-                  </span>
-                ))}
-              </h3>
-              {/* Mini tag row preview */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                {service.tags.slice(0, 3).map((tag, ti) => (
-                  <span key={ti} style={{
-                    padding: "2px 8px", borderRadius: 100,
-                    border: `1px solid ${service.color}25`,
-                    fontFamily: "var(--font-mono)", fontSize: 9,
-                    color: "rgba(255,255,255,0.35)",
-                  }}>{tag}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── BACK ── */}
+        {/* Color tint wash */}
         <div style={{
           position: "absolute", inset: 0,
-          borderRadius: 16,
-          overflow: "hidden",
-          backfaceVisibility: "hidden",
-          WebkitBackfaceVisibility: "hidden",
-          transform: "rotateY(180deg)",
-          background: `linear-gradient(145deg, ${service.color}12 0%, #0e0e0e 50%, #0a0a0a 100%)`,
-          border: `1px solid ${service.color}28`,
-        }}>
-          {/* Top accent */}
-          <div style={{
-            position: "absolute", top: 0, left: 0, right: 0, height: 2,
-            background: `linear-gradient(to right, ${service.color}cc, transparent 70%)`,
-          }} />
+          background: `linear-gradient(135deg, ${service.color}${isOpen ? "22" : "0a"} 0%, transparent 60%)`,
+          transition: "background 0.45s ease",
+        }} />
 
-          {/* Scan line */}
+        {/* Top accent bar */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 2,
+          background: `linear-gradient(to right, ${service.color}, ${service.color}40, transparent)`,
+          boxShadow: isOpen ? `0 0 12px ${service.color}60` : "none",
+          transition: "box-shadow 0.4s ease",
+        }} />
+
+        {/* Scan line — only when open */}
+        {isOpen && (
           <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
             <div style={{
               position: "absolute", left: 0, right: 0, height: 1,
-              background: `linear-gradient(to right, transparent, ${service.color}50, transparent)`,
-              animation: "scan 4s linear infinite",
+              background: `linear-gradient(to right, transparent, ${service.color}55, transparent)`,
+              animation: "scan 3.5s linear infinite",
             }} />
           </div>
+        )}
 
-          {/* Ghost watermark */}
-          <span style={{
-            position: "absolute", right: 12, top: 8,
-            fontFamily: "var(--font-display)", fontWeight: 800,
-            fontSize: "5rem", color: `${service.color}06`,
-            letterSpacing: "-0.06em", userSelect: "none",
-          }}>{service.id}</span>
+        {/* Ghost ID watermark */}
+        <span style={{
+          position: "absolute", right: 14, bottom: 8,
+          fontFamily: "var(--font-display)", fontWeight: 800,
+          fontSize: "5rem", lineHeight: 1,
+          color: `${service.color}${isOpen ? "18" : "0c"}`,
+          letterSpacing: "-0.06em", userSelect: "none",
+          transition: "color 0.4s ease",
+        }}>{service.id}</span>
 
-          {/* All back content */}
-          <div style={{
-            position: "relative", zIndex: 2,
-            padding: "16px 20px",
-            height: "100%",
-            display: "flex", flexDirection: "column", justifyContent: "space-between",
-          }}>
-            {/* Top: title */}
-            <div>
-              <p style={{
-                fontFamily: "var(--font-mono)", fontSize: 9,
-                color: `${service.color}80`, letterSpacing: "0.25em",
-                textTransform: "uppercase", margin: "0 0 5px",
-              }}>{service.subtitle}</p>
-              <h3 style={{
-                fontFamily: "var(--font-display)", fontWeight: 800,
-                fontSize: "1.3rem",
-                color: "#e5e5e5", letterSpacing: "-0.03em",
-                lineHeight: 1.0, margin: "0 0 8px",
-              }}>
-                {service.title.split("\n").map((line, li) => (
-                  <span key={li} style={{ display: "block" }}>
-                    {li === 1
-                      ? <em style={{ color: service.color, fontStyle: "italic", textShadow: `0 0 18px ${service.color}45` }}>{line}</em>
-                      : line}
-                  </span>
-                ))}
-              </h3>
-              <div style={{ height: 1, background: `linear-gradient(to right, ${service.color}40, transparent)`, marginBottom: 8 }} />
-              {/* Description — full, no clamp */}
-              <p style={{
-                fontFamily: "var(--font-body)", fontWeight: 300,
-                fontSize: "0.8rem",
-                color: "rgba(255,255,255,0.52)", lineHeight: 1.7, margin: 0,
-              }}>{service.desc}</p>
-            </div>
+        {/* Content row */}
+        <div style={{
+          position: "absolute", inset: 0,
+          padding: "14px 16px",
+          display: "flex", flexDirection: "column", justifyContent: "space-between",
+        }}>
+          {/* Top row: ID badge + chevron */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{
+              fontFamily: "var(--font-mono)", fontSize: 9,
+              color: `${service.color}cc`, letterSpacing: "0.35em",
+              background: `${service.color}15`, border: `1px solid ${service.color}30`,
+              padding: "2px 8px", borderRadius: 100,
+            }}>{service.id}</span>
 
-            {/* Bottom: tags + metric */}
-            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10, marginTop: 8 }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, flex: 1 }}>
-                {service.tags.slice(0, 4).map((tag, ti) => (
-                  <span key={ti} style={{
-                    padding: "3px 9px", borderRadius: 100,
-                    border: `1px solid ${service.color}28`,
-                    fontFamily: "var(--font-mono)", fontSize: 9,
-                    color: "rgba(255,255,255,0.38)",
-                  }}>{tag}</span>
-                ))}
-              </div>
-              {/* Metric badge */}
-              <div style={{
-                display: "flex", flexDirection: "column", alignItems: "center",
-                padding: "6px 12px", borderRadius: 10, flexShrink: 0,
-                background: `${service.color}0c`,
-                border: `1px solid ${service.color}22`,
-              }}>
-                <span style={{
-                  fontFamily: "var(--font-display)", fontWeight: 800,
-                  fontSize: "1.4rem",
-                  color: service.color, letterSpacing: "-0.04em",
-                  textShadow: `0 0 14px ${service.color}55`,
-                  lineHeight: 1,
-                }}>{service.metric.value}</span>
-                <span style={{
-                  fontFamily: "var(--font-mono)", fontSize: 8,
-                  color: "rgba(255,255,255,0.32)",
-                  letterSpacing: "0.1em", textTransform: "uppercase",
-                  textAlign: "center", marginTop: 2, lineHeight: 1.4,
-                }}>{service.metric.label}</span>
-              </div>
+            {/* Animated chevron ring */}
+            <div style={{
+              width: 30, height: 30, borderRadius: "50%",
+              border: `1.5px solid ${isOpen ? service.color + "70" : "rgba(255,255,255,0.15)"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: isOpen ? `${service.color}15` : "rgba(0,0,0,0.3)",
+              backdropFilter: "blur(4px)",
+              transition: "all 0.35s ease",
+            }}>
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"
+                style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.35s ease" }}>
+                <path d="M2 4L5.5 7.5L9 4" stroke={isOpen ? service.color : "rgba(255,255,255,0.5)"}
+                  strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
           </div>
 
-          {/* Corner bracket */}
-          <svg style={{ position: "absolute", bottom: 10, right: 10 }}
-            width="12" height="12" viewBox="0 0 14 14" fill="none">
-            <path d="M0 14 L14 14 L14 0" stroke={service.color} strokeWidth="1" strokeOpacity="0.3" />
-          </svg>
+          {/* Bottom: subtitle + title */}
+          <div>
+            <p style={{
+              fontFamily: "var(--font-mono)", fontSize: 9,
+              color: `${service.color}99`, letterSpacing: "0.22em",
+              textTransform: "uppercase", margin: "0 0 5px",
+            }}>{service.subtitle}</p>
+            <h3 style={{
+              fontFamily: "var(--font-display)", fontWeight: 800,
+              fontSize: isOpen ? "1.45rem" : "1.25rem",
+              color: "#f0f0f0", letterSpacing: "-0.03em",
+              lineHeight: 1.05, margin: 0,
+              transition: "font-size 0.35s ease",
+            }}>
+              {service.title.split("\n").map((line, li) => (
+                <span key={li} style={{ display: "inline" }}>
+                  {li === 1
+                    ? <em style={{
+                        color: service.color, fontStyle: "italic",
+                        textShadow: isOpen ? `0 0 20px ${service.color}50` : "none",
+                        transition: "text-shadow 0.4s ease",
+                      }}> {line}</em>
+                    : line}
+                </span>
+              ))}
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Expanded body ── */}
+      <div
+        ref={bodyRef}
+        style={{
+          maxHeight: isOpen ? "900px" : "0px",
+          overflow: "hidden",
+          transition: "max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+          background: `linear-gradient(180deg, ${service.color}08 0%, #0a0a0a 40%)`,
+        }}
+      >
+        <div ref={itemsRef} style={{ padding: "18px 16px 22px" }}>
+
+          {/* Divider */}
+          <div data-anim-item style={{
+            height: 1, marginBottom: 16,
+            background: `linear-gradient(to right, ${service.color}50, transparent)`,
+          }} />
+
+          {/* Description */}
+          <p data-anim-item style={{
+            fontFamily: "var(--font-body)", fontWeight: 300,
+            fontSize: "0.875rem",
+            color: "rgba(255,255,255,0.58)", lineHeight: 1.78,
+            margin: "0 0 20px",
+          }}>{service.desc}</p>
+
+          {/* Items list */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 20 }}>
+            {service.items.map((item, ii) => (
+              <div
+                data-anim-item
+                key={ii}
+                style={{
+                  display: "flex", gap: 13, alignItems: "flex-start",
+                  padding: "12px 14px", borderRadius: 10,
+                  background: "rgba(255,255,255,0.025)",
+                  border: `1px solid ${service.color}1a`,
+                }}
+              >
+                {/* Glowing dot */}
+                <div style={{
+                  width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
+                  background: service.color,
+                  boxShadow: `0 0 8px ${service.color}80`,
+                  marginTop: 4,
+                }} />
+                <div>
+                  <p style={{
+                    fontFamily: "var(--font-mono)", fontWeight: 600,
+                    fontSize: "0.8rem",
+                    color: "rgba(255,255,255,0.88)", margin: "0 0 3px",
+                  }}>{item.title}</p>
+                  <p style={{
+                    fontFamily: "var(--font-body)", fontWeight: 300,
+                    fontSize: "0.76rem",
+                    color: "rgba(255,255,255,0.4)", margin: 0, lineHeight: 1.55,
+                  }}>{item.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tags */}
+          <div data-anim-item style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 18 }}>
+            {service.tags.map((tag, ti) => (
+              <span key={ti} style={{
+                padding: "4px 12px", borderRadius: 100,
+                border: `1px solid ${service.color}2a`,
+                fontFamily: "var(--font-mono)", fontSize: 10,
+                color: "rgba(255,255,255,0.45)",
+                background: `${service.color}08`,
+              }}>{tag}</span>
+            ))}
+          </div>
+
+          {/* Metric */}
+          <div data-anim-item style={{
+            display: "inline-flex", alignItems: "center", gap: 14,
+            padding: "12px 18px", borderRadius: 12,
+            background: `${service.color}0c`,
+            border: `1px solid ${service.color}28`,
+          }}>
+            <span style={{
+              fontFamily: "var(--font-display)", fontWeight: 800,
+              fontSize: "2rem",
+              color: service.color, letterSpacing: "-0.04em",
+              textShadow: `0 0 22px ${service.color}60`,
+              lineHeight: 1,
+            }}>{service.metric.value}</span>
+            <div>
+              <div style={{
+                width: 28, height: 1,
+                background: `linear-gradient(to right, ${service.color}60, transparent)`,
+                marginBottom: 4,
+              }} />
+              <span style={{
+                fontFamily: "var(--font-mono)", fontSize: 9,
+                color: "rgba(255,255,255,0.38)",
+                letterSpacing: "0.18em", textTransform: "uppercase",
+                display: "block", lineHeight: 1.5,
+              }}>{service.metric.label}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
