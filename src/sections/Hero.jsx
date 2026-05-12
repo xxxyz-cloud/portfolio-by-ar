@@ -379,7 +379,7 @@ const Hero = () => {
                 className="font-mono text-[9px] tracking-[0.35em] text-text-dim uppercase"
                 style={{ writingMode: "vertical-rl" }}
               >
-                Portfolio · 2025
+                Portfolio · 2026
               </span>
               <div className="w-px h-24 bg-gradient-to-b from-transparent via-accent/35 to-transparent" />
             </div>
