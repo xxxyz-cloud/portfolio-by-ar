@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Navbar from "./sections/Navbar";
 import Hero from "./sections/Hero";
 import ServiceSummary from "./sections/ServiceSummary";
@@ -18,6 +18,14 @@ const App = () => {
   const { progress }  = useProgress();
   const [isReady,       setIsReady]       = useState(false);
   const [loadProgress,  setLoadProgress]  = useState(0);
+
+  // Stable reference — prevents WebGLLoader's reveal effect from
+  // re-running (and cancelling its pending timeout) on every App
+  // re-render. Without this, an inline arrow function here gets a
+  // new identity each render, which sits in WebGLLoader's effect
+  // dependency array and silently kills the dissolve timeout,
+  // freezing the loader at 100%.
+  const handleLoaderComplete = useCallback(() => setIsReady(true), []);
 
   useEffect(() => {
     const mobile = window.innerWidth < 768;
@@ -45,7 +53,7 @@ const App = () => {
       {!isReady && (
         <WebGLLoader
           progress={loadProgress}
-          onComplete={() => setIsReady(true)}
+          onComplete={handleLoaderComplete}
         />
       )}
 
