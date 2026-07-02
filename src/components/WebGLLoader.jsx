@@ -5,6 +5,16 @@
  * Auto-reveals after progress hits 100 — no click needed.
  * Smooth: UI fades out first, then dissolve runs, onComplete fires
  * 1s early so the hero fade-in finishes exactly as the circle clears.
+ *
+ * FIX: onComplete is now read from a ref inside the reveal effect
+ * instead of sitting in that effect's dependency array. Previously,
+ * if the parent passed a new `onComplete` function identity while
+ * the 700ms setTimeout was pending (e.g. from a re-render), React
+ * would clean up (clearTimeout) and re-run the effect — but since
+ * hasRevealedRef.current was already true, the effect would bail
+ * out immediately without rescheduling anything. Net result: the
+ * dissolve/fade-out timeout got cancelled and never replaced, and
+ * the loader froze permanently at "Ready / 100%".
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -107,7 +117,16 @@ const WebGLLoader = ({ progress = 0, onComplete }) => {
   const hasRevealedRef = useRef(false);
   const uiRef          = useRef(null);
 
+  // Always holds the latest onComplete without being a dependency
+  // of the reveal effect below — this is what prevents the freeze.
+  const onCompleteRef  = useRef(onComplete);
+
   const [isReady, setIsReady] = useState(false);
+
+  /* ── Keep the ref in sync with the latest prop ─────────────────── */
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   /* ── Three.js bootstrap ─────────────────────────────────────────── */
   useEffect(() => {
@@ -199,11 +218,14 @@ const WebGLLoader = ({ progress = 0, onComplete }) => {
       // Fire onComplete 1s before dissolve ends so App.jsx's
       // transition-opacity duration-1000 finishes right as circle clears.
       // 3.5s total − 1.0s = 2.5s
-      gsap.delayedCall(2.5, () => onComplete?.());
+      gsap.delayedCall(2.5, () => onCompleteRef.current?.());
     }, 700);
 
     return () => clearTimeout(t);
-  }, [progress, onComplete]);
+    // NOTE: onComplete intentionally excluded from deps — read via
+    // onCompleteRef instead so a changing callback identity can never
+    // cancel this pending timeout after hasRevealedRef is already set.
+  }, [progress]);
 
   const pct   = Math.min(Math.floor(progress), 100);
   const label =
