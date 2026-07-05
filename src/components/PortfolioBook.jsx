@@ -50,6 +50,10 @@ const THEMES = [
 ];
 
 /* ── Per-project rich metadata ───────────────────────────────── */
+/* NOTE: this array is positional — PROJECT_META[i] describes
+   projects[i] from ../constants. When projects are swapped in/out,
+   update the matching index here too, or the info-page canvas and
+   the BookNav card will show stale copy for the new project. */
 const PROJECT_META = [
   {
     category: "Real-Time Collaboration",
@@ -68,18 +72,18 @@ const PROJECT_META = [
     status: "LIVE",
   },
   {
-    category: "3D Creative Agency",
-    year: "2025",
-    description: "An immersive agency showcase built with Three.js featuring a glowing neon helmet hero, a massive GPU-driven particle system, and silky scroll animations choreographed with GSAP.",
+    category: "AI Crisis Recovery",
+    year: "2026",
+    description: "A hackathon-built AI platform that guides teams through a crisis in real time. A 6-agent Gemini pipeline diagnoses the situation, drafts a survival plan, simulates parallel recovery paths with a self-correcting loop, and coaches the team to execution.",
     highlights: [
-      "Custom WebGL shader for neon helmet glow",
-      "GPU particle system with 100k+ particles",
-      "Locomotive Scroll + GSAP scroll-linked fx",
+      "6-agent Gemini pipeline with self-correction",
+      "WebGL simulation viz of parallel futures",
+      "Hardened backend: circuit breaker, key failover",
     ],
     metrics: [
-      { label: "Performance", value: 90 },
-      { label: "Innovation",  value: 92 },
-      { label: "UI Craft",    value: 98 },
+      { label: "Performance", value: 84 },
+      { label: "Innovation",  value: 96 },
+      { label: "UI Craft",    value: 90 },
     ],
     status: "LIVE",
   },
@@ -100,18 +104,18 @@ const PROJECT_META = [
     status: "LIVE",
   },
   {
-    category: "Educational Platform",
+    category: "Luxury E-Commerce",
     year: "2025",
-    description: "An interactive learning hub covering REST APIs through hands-on modules and quizzes. Each lesson is paired with live API calls against JSONPlaceholder so learners see real responses instantly.",
+    description: "A luxury fashion e-commerce frontend backed by a full MERN stack. A WebGL displacement-shader hero, scroll-scramble text, and a custom dot-ring-label cursor state machine give it an editorial, high-fashion feel.",
     highlights: [
-      "50+ interactive API topic modules",
-      "Progressive quiz with instant scoring",
-      "Canvas particle animations throughout",
+      "WebGL displacement-map hero transitions",
+      "Custom dot-ring-label cursor state machine",
+      "Keyword-hover photo burst in editorial section",
     ],
     metrics: [
-      { label: "Performance", value: 80 },
-      { label: "Innovation",  value: 78 },
-      { label: "UI Craft",    value: 85 },
+      { label: "Performance", value: 87 },
+      { label: "Innovation",  value: 91 },
+      { label: "UI Craft",    value: 97 },
     ],
     status: "LIVE",
   },
@@ -321,7 +325,7 @@ function makeInfoPage(project, index) {
   ctx.fillStyle = descG; ctx.fillRect(P, y, 2, 160);
   const descText = meta.description || project.description || "";
   ctx.save();
-  ctx.font = "400 22px Arial, sans-serif"; ctx.fillStyle = "rgba(170,170,182,0.60)"; ctx.textAlign = "left";
+  ctx.font = "400 22px Arial, sans-serif"; ctx.fillStyle = "rgba(205,205,216,0.80)"; ctx.textAlign = "left";
   const descLines = wrapText(ctx, descText, CW - 22, 4);
   const DESC_LH = 34;
   descLines.forEach((l, li) => { ctx.fillText(l, P + 18, y + 26 + li * DESC_LH); }); ctx.restore();
@@ -375,7 +379,7 @@ function makeInfoPage(project, index) {
     ctx.beginPath(); ctx.moveTo(P + 36, hy + 11); ctx.lineTo(P + 58, hy + 11); ctx.stroke();
     ctx.setLineDash([]); ctx.restore();
     ctx.save();
-    ctx.font = "400 20px Arial, sans-serif"; ctx.fillStyle = "rgba(172,172,184,0.62)"; ctx.textAlign = "left";
+    ctx.font = "400 20px Arial, sans-serif"; ctx.fillStyle = "rgba(210,210,220,0.82)"; ctx.textAlign = "left";
     ctx.fillText(hl, P + 64, hy + 17); ctx.restore();
     if (i < (meta.highlights?.length ?? 0) - 1) {
       ctx.strokeStyle = `rgba(255,255,255,0.05)`; ctx.lineWidth = 1;
@@ -482,8 +486,8 @@ const Page=({number,frontTex,backTex,page,opened,bookClosed,setPage,isCover})=>{
     for(let i=0;i<=SEGS;i++){const b=new Bone();bones.push(b);b.position.x=i===0?0:SW;if(i>0)bones[i-1].add(b);}
     const sk=new Skeleton(bones);
     const mats=[...edgeMats,
-      new MeshStandardMaterial({color:WHITE,map:frontTex,roughness:0.1,metalness:0}),
-      new MeshStandardMaterial({color:WHITE,map:backTex, roughness:0.1,metalness:0}),
+      new MeshStandardMaterial({color:WHITE,map:frontTex,roughness:0.62,metalness:0,envMapIntensity:0.25}),
+      new MeshStandardMaterial({color:WHITE,map:backTex, roughness:0.62,metalness:0,envMapIntensity:0.25}),
     ];
     const m=new SkinnedMesh(geo,mats);
     m.castShadow=m.receiveShadow=true; m.frustumCulled=false;
@@ -849,15 +853,15 @@ const PortfolioBook=()=>{
             >
               <color attach="background" args={["#0a0a0a"]}/>
               <fog attach="fog" args={["#0a0a0a",14,24]}/>
-              <ambientLight intensity={1.8}/>
-              <directionalLight position={[4,6,4]} intensity={4.5} castShadow={!isMobile}
+              <ambientLight intensity={2.4}/>
+              <directionalLight position={[4,6,4]} intensity={2.1} castShadow={!isMobile}
                 shadow-mapSize-width={isMobile?1024:2048} shadow-mapSize-height={isMobile?1024:2048}
                 shadow-bias={-0.0001} color="#ffffff"/>
-              <directionalLight position={[-4,3,3]} intensity={2.8} color="#ffffff"/>
-              <directionalLight position={[0,0,6]} intensity={2.0} color="#fffde8"/>
-              <pointLight position={[0,-2.2,2.5]} intensity={3.5} color="#00ff88" distance={12}/>
-              <pointLight position={[0,3,-3.5]} intensity={2.0} color="#b77bff" distance={14}/>
-              <pointLight position={[2,1,3]} intensity={2.5} color="#00d4ff" distance={10}/>
+              <directionalLight position={[-4,3,3]} intensity={1.3} color="#ffffff"/>
+              <directionalLight position={[0,0,6]} intensity={0.9} color="#fffde8"/>
+              <pointLight position={[0,-2.2,2.5]} intensity={1.6} color="#00ff88" distance={12}/>
+              <pointLight position={[0,3,-3.5]} intensity={0.9} color="#b77bff" distance={14}/>
+              <pointLight position={[2,1,3]} intensity={1.1} color="#00d4ff" distance={10}/>
               <Suspense fallback={null}>
                 <group position={[0,0,0]}>
                   <Book page={page} setPage={setPage} bookPages={bookPages}/>
