@@ -98,16 +98,17 @@ export const projects = [
   },
   {
     id: 2,
-    name: "GameBit Agency",
+    name: "Phoenix",
     description:
-      "Cyberpunk portfolio with 3D helmet model, particle systems, and GPU-accelerated effects. Award-worthy animations with Locomotive Scroll.",
-    href: "https://game-bit-seven.vercel.app/",
-    image: "/assets/projects/gamebit.jpg",
+      "AI-powered crisis recovery platform built for a hackathon and deployed on Google Cloud Run. A 6-agent Gemini pipeline runs crisis diagnostics, generates a survival plan, simulates parallel futures with a self-correction loop, and coaches the team through recovery in real time.",
+    href: "https://phoenix-647479600848.us-west1.run.app/",
+    image: "/assets/projects/phoenix.jpg",
     frameworks: [
-      { id: 1, name: "Three.js" },
-      { id: 2, name: "GSAP" },
-      { id: 3, name: "Locomotive Scroll" },
-      { id: 4, name: "WebGL" },
+      { id: 1, name: "React" },
+      { id: 2, name: "Google Gemini AI" },
+      { id: 3, name: "Three.js" },
+      { id: 4, name: "GSAP" },
+      { id: 5, name: "Express" },
     ],
     featured: true,
   },
@@ -128,16 +129,17 @@ export const projects = [
   },
   {
     id: 4,
-    name: "SSS API Learning Hub",
+    name: "AURA",
     description:
-      "Interactive API learning platform with 50+ topics, progressive quizzes, and 100+ viva questions. Engaging particle animations throughout.",
-    href: "https://working-with-api-bay.vercel.app/",
-    image: "/assets/projects/api-hub.jpg",
+      "Luxury fashion e-commerce frontend with a full MERN backend. Features a WebGL displacement-shader hero transition, scroll-scramble text effects, a custom dot-ring-label cursor state machine, and a keyword-hover photo burst in the editorial section.",
+    href: "https://aura-ecom-frontend.vercel.app/",
+    image: "/assets/projects/aura.jpg",
     frameworks: [
-      { id: 1, name: "Vanilla JS" },
-      { id: 2, name: "REST APIs" },
-      { id: 3, name: "JSONPlaceholder" },
-      { id: 4, name: "Canvas API" },
+      { id: 1, name: "React" },
+      { id: 2, name: "Three.js" },
+      { id: 3, name: "GSAP" },
+      { id: 4, name: "Zustand" },
+      { id: 5, name: "MongoDB" },
     ],
   },
     {
@@ -185,7 +187,3 @@ export const stats = [
   { number: "50+", label: "Concurrent Users Supported" },
   { number: "60", label: "FPS Mobile Performance" },
 ];
-
-
-
-
